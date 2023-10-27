@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 project(cutlass CUDA CXX)
 
 find_package(CUDAToolkit REQUIRED)
-include_directories("./third_party/cutlass/include")
+include_directories("./third-party/cutlass/include")
 
 file(GLOB CUDA_SOURCE_FILES "./csrc/*.cu")
 foreach(CUDA_SOURCE_FILE ${CUDA_SOURCE_FILES})
