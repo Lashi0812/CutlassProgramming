@@ -1,0 +1,13 @@
+name: nlp  # Name of the conda environment
+channels:
+  - defaults
+  - nvidia
+  - pytorch-nightly
+dependencies:
+  - pytorch 
+  - torchvision 
+  - torchaudio 
+  - pytorch-cuda=12.1 
+  - ipykernel
+  - ipywidgets
+  - pandas

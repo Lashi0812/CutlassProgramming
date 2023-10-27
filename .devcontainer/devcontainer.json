@@ -1,0 +1,40 @@
+{
+    "name":"CUTLASS",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."},
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-vscode.cpptools",
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "eamodio.gitlens",
+                "streetsidesoftware.code-spell-checker",
+                "ms-vscode.cmake-tools" ,
+                "NVIDIA.nsight-vscode-edition",
+                "GrapeCity.gc-excelviewer" // to view csv in table
+
+            ],
+            "settings": {
+                "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+                "jupyter.debugJustMyCode": false
+            }
+        }
+    },
+    "features": {
+        "./zsh-plugins": {
+            "plugins": "zsh-syntax-highlighting zsh-autosuggestions",
+            "omzPlugins": "https://github.com/zsh-users/zsh-syntax-highlighting https://github.com/zsh-users/zsh-autosuggestions"
+        }
+    },
+    "mounts": [
+        "source=/mnt/drive/data,target=/mnt/data,type=bind,consistency=cached",
+        "source=projectname-bashhistory,target=/commandhistory,type=volume"
+    ],
+    "runArgs": ["--env-file",".devcontainer/devcontainer.env"
+    // ,"--runtime=nvidia" // nvidia-container-toolkit
+    ,"--gpus","all" 
+    
+    ]
+}
