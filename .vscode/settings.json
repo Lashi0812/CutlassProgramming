@@ -5,6 +5,8 @@
     "files.associations": {
         "*.html": "jinja-html",
         "*.jinja2": "django-html",
-        "ostream": "cpp"
-    }
+        "ostream": "cpp",
+        "functional": "cpp"
+    },
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
 }
