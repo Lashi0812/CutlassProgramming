@@ -35,6 +35,7 @@ void test_repeat()
     print_layout(raked_layout);
     auto subtile = make_tile(Layout<_2, _3>{},
                              Layout<_2, _4>{});
+    std::cout << subtile << std::endl;
     constexpr int R0 = decltype(rank(subtile))::value;
     constexpr int R1 = decltype(rank(raked_layout))::value;
 
