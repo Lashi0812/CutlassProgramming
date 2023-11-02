@@ -1,0 +1,41 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cmake",
+			"label": "CMake: build",
+			"command": "build",
+			"targets": [
+				"all"
+			],
+			"group": {
+				"kind": "build"
+			},
+			"problemMatcher": [],
+			"detail": "CMake template build task"
+		},
+		{
+			"label": "Run Executable",
+            "type": "shell",
+            "command": "./build/${input:exe}",
+            "group": "build",
+			"detail": "Select Executable to Run",
+            "dependsOn": [
+                "CMake: build"
+            ]
+		}
+	],
+	"inputs": [
+        // Refer for command : https://github.com/microsoft/vscode/issues/109789
+        {
+            "type": "command",
+            "id": "exe",
+            "command": "shellCommand.execute",
+            "args": {
+                "command": "ls -F . | grep '*$' | sed 's/*$//'",
+                "cwd": "${workspaceFolder}/build",
+				"description":"Select Executable to Run",
+            }
+        }
+    ]
+}
