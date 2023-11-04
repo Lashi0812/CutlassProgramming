@@ -44,9 +44,11 @@ __global__ void fma(nv_half *A, nv_half *B, float *C)
                                       make_tile(make_layout(_2{}, _1{})))(_, threadIdx.x);
     auto dest_tensorB = make_tensor(make_rmem_ptr(regB), make_layout(_2{}, _1{}));
 
-    uint32_t(&castRegA)[2] = reinterpret_cast<uint32_t(&)[2]>(regA);
-    uint32_t(&castRegB)[1] = reinterpret_cast<uint32_t(&)[1]>(regB);
+    // uint32_t(&castRegA)[2] = reinterpret_cast<uint32_t(&)[2]>(regA);
+    // uint32_t(&castRegB)[1] = reinterpret_cast<uint32_t(&)[1]>(regB);
 
+    uint32_t *castRegA = reinterpret_cast<uint32_t *>(regA);
+    uint32_t *castRegB = reinterpret_cast<uint32_t *>(regB);
 
     copy(each_threadA, dest_tensorA);
     copy(each_threadB, dest_tensorB);
