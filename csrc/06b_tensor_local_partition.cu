@@ -120,18 +120,17 @@ void test_local_partition_warpC()
     //                                   make_tile(make_layout(_2{}, _1{}),
     //                                             make_layout(_2{}, _4{})))(_, threadIdx.x);
 
-    std::vector<int> vec_c(16*8,1) ;
+    std::vector<int> vec_c(16 * 8, 1);
     auto layout = make_layout(make_shape(_16{}, _8{}));
     // auto tensor_c = make_counting_tensor(layout);
-    auto tensor_c = make_tensor(vec_c.data(),layout);
-
+    auto tensor_c = make_tensor(vec_c.data(), layout);
 
     auto tile = make_tile(make_layout(_2{}, _1{}),
                           make_layout(_2{}, _4{}));
 
-    std::vector<int> dest_vec_c{0,1,2,3};
+    std::vector<int> dest_vec_c{0, 1, 2, 3};
     // auto dest_tensorC = make_counting_tensor(make_layout(_4{}, _1{}));
-    auto dest_tensorC = make_tensor(dest_vec_c.data(),make_layout(_4{}, _1{}));
+    auto dest_tensorC = make_tensor(dest_vec_c.data(), make_layout(_4{}, _1{}));
 
     // std::cout << logical_divide(tensor_b, tile) << std::endl;
     // std::cout << zipped_divide(tensor_b, tile) << std::endl;
@@ -153,6 +152,61 @@ void test_local_partition_warpC()
     }
 }
 
+void test_local_partition_thread()
+{
+    auto M = _4{};
+    auto N = _4{};
+
+    auto threadLayout = make_tile(make_layout(_2{}), make_layout(_2{}));
+
+    auto matLayout = make_layout(make_shape(M, N));
+    auto tensorC = make_counting_tensor(matLayout);
+    auto tensorA = make_counting_tensor(matLayout);
+    auto tensorB = make_counting_tensor(matLayout);
+
+    print("Tensor Of C : ");
+    print_tensor(tensorC);
+    print("\n");
+
+    // considering the thread (0,1) in block (1,1)
+    auto threadX = _1{};
+    auto threadY = _0{};
+    auto blockX = _1{};
+    auto blockY = _1{};
+
+    // considering the thread (0,1) in block (1,1) will do work
+    auto threadC = zipped_divide(tensorC, threadLayout)(make_coord(threadY, threadX), make_coord(blockY, blockX));
+    auto threadC_coord = zipped_divide(tensorC.layout(), threadLayout)(make_coord(threadY, threadX), make_coord(blockY, blockX));
+
+    print("thread (0,1) in block (0,1) will do work for : %d \n", decltype(threadC_coord)::value);
+
+    // gather all the element from A that need for calculate c
+    auto neededA = tensorA(get<0>(tensorA.get_flat_coord(threadC_coord)), _);
+    print("Need A element : ");
+    print_tensor(neededA);
+    print("\n");
+
+    auto neededB = tensorB(_,get<1>(tensorB.get_flat_coord(threadC_coord)));
+    print("Need B element : ");
+    print_tensor(neededB);
+    print("\n");
+}
+
+void test_single_tensor()
+{
+    auto tensor = make_counting_tensor(make_layout(make_shape(2,2)));
+    auto const& [sliced_layout,offset] = slice_and_offset(make_coord(0,1), tensor.layout());
+    print(offset);
+    print("\n");
+    print(sliced_layout);
+    print("\n");
+    
+    // print(tensor(0,0));
+    // print(tensor[0]);
+    // print("\n");
+    // print_tensor(tensor);
+}
+
 int main()
 {
     // test_product_each();
@@ -161,5 +215,7 @@ int main()
     // test_local_partition_C();
     // test_local_partition_warpA();
     // test_local_partition_warpB();
-    test_local_partition_warpC();
+    // test_local_partition_warpC();
+    // test_local_partition_thread();
+    test_single_tensor();
 }

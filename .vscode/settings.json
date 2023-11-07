@@ -4,6 +4,7 @@
         "endforeach",
         "forceinline",
         "gmem",
+        "ivec",
         "rmem"
     ],
     "files.associations": {
