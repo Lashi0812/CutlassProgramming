@@ -83,10 +83,36 @@ void test_local_tile()
     // std::cout << gA(0, 0, _) << std::endl;
 }
 
+void test_local_tile_vs_manual()
+{
+    auto tensor_layout = make_layout(make_shape(_8{}, _4{}));
+    auto shape = make_shape(_2{}, _2{});
+
+    auto tensor = make_counting_tensor(tensor_layout);
+    print("Tensor : ");
+    print_tensor(tensor);
+    print("\n");
+
+    auto divided = zipped_divide(tensor, shape);
+    print("Zipped Divided : ");
+    print_tensor(divided);
+    print("\n");
+
+    print("Manual All thread in all blocks in the 0th Col : ");
+    print_tensor(divided(_,make_coord(_,0)));
+    print("\n");
+
+    print("Local tile All thread in all blocks in the 0th Col : ");
+    print_tensor(local_tile(tensor,shape,make_coord(_,0)));
+    print("\n");
+}
+
+
 int main()
 {
     // test();
     // test_repeat();
     // test_zipped();
-    test_local_tile();
+    // test_local_tile();
+    test_local_tile_vs_manual();
 }

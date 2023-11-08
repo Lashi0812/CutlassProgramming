@@ -186,7 +186,7 @@ void test_local_partition_thread()
     print_tensor(neededA);
     print("\n");
 
-    auto neededB = tensorB(_,get<1>(tensorB.get_flat_coord(threadC_coord)));
+    auto neededB = tensorB(_, get<1>(tensorB.get_flat_coord(threadC_coord)));
     print("Need B element : ");
     print_tensor(neededB);
     print("\n");
@@ -194,18 +194,52 @@ void test_local_partition_thread()
 
 void test_single_tensor()
 {
-    auto tensor = make_counting_tensor(make_layout(make_shape(2,2)));
-    auto const& [sliced_layout,offset] = slice_and_offset(make_coord(0,1), tensor.layout());
+    auto tensor = make_counting_tensor(make_layout(make_shape(2, 2)));
+    auto const &[sliced_layout, offset] = slice_and_offset(make_coord(0, 1), tensor.layout());
     print(offset);
     print("\n");
     print(sliced_layout);
     print("\n");
-    
+
     // print(tensor(0,0));
     // print(tensor[0]);
     // print("\n");
     // print_tensor(tensor);
 }
+
+void test_local_partition_vs_manual()
+{
+    auto tensor_layout = make_layout(make_shape(_8{}, _4{}));
+    auto shape = make_shape(_2{}, _2{});
+
+    auto tensor = make_counting_tensor(tensor_layout);
+    print("Tensor : ");
+    print_tensor(tensor);
+    print("\n");
+
+    auto divided = zipped_divide(tensor, shape);
+    print("Zipped Divided : ");
+    print_tensor(divided);
+    print("\n");
+
+    auto manual_tile = divided(_, make_coord(_, 0));
+    print("Manual All thread in all blocks in the 0th Col : ");
+    print_tensor(manual_tile);
+    print("\n");
+
+    auto manual_part = manual_tile(make_coord(0,0),_);
+    print("Element that Need by the thread0 : ");
+    print_tensor(manual_part);
+    print("\n");
+
+    auto local_tileA = local_tile(tensor,shape,make_coord(_,0));
+    auto local_partA = local_partition(local_tileA,shape,0);
+
+    print("Using the fn Element that Need by the thread0 : ");
+    print_tensor(local_partA); 
+    print("\n");
+}
+
 
 int main()
 {
@@ -217,5 +251,6 @@ int main()
     // test_local_partition_warpB();
     // test_local_partition_warpC();
     // test_local_partition_thread();
-    test_single_tensor();
+    // test_single_tensor();
+    test_local_partition_vs_manual();
 }
