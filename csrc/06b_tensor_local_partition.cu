@@ -292,12 +292,12 @@ void test_outer_partition()
 void test_local_partition_with_proj()
 {
     auto tensor_layoutC = make_layout(make_shape(_2{}, _2{}));
-    auto tensor_layoutA = make_layout(make_shape(_2{}, _3{}));
+    auto tensor_layoutA = make_layout(make_shape(_2{}, _3{}),GenRowMajor());
     auto tensor_layoutB = make_layout(make_shape(_2{}, _3{}));
 
     auto tileC = make_shape(_2{}, _2{});
     auto tileA = make_shape(_1{}, _3{});
-    auto tileB = make_shape(_1{}, _3{});
+    auto tileB = make_shape(_3{}, _1{});
 
     std::vector<int> vecC{0, 1, 2, 3};
     std::vector<int> vecA{4, 5, 6, 7, 8, 9};
@@ -324,30 +324,6 @@ void test_local_partition_with_proj()
         auto each_threadB = outer_partition(tensorB, tileB, get<0>(tensorC.get_flat_coord(i)));
         auto each_threadC = local_partition(tensorC, tensor_layoutC, i, Step<_1, _1>{});
         print("Thread %d :  \n", i);
-
-        // print("product each for A: ");
-        // print(product_each(shape(tensor_layoutA)));
-        // print("\n");
-
-        // print("product each for B: ");
-        // print(product_each(shape(tensor_layoutB)));
-        // print("\n");
-
-        // print("dice product each for A: ");
-        // print(dice(stepA, product_each(shape(tensor_layoutA))));
-        // print("\n");
-
-        // print("dice product each for B: ");
-        // print(dice(stepB, product_each(shape(tensor_layoutB))));
-        // print("\n");
-
-        // print("Coord A:  ");
-        // print(dice(stepA, tensor_layoutA).get_flat_coord(i));
-        // print("\n");
-
-        // print("Coord A:  ");
-        // print(dice(stepB, tensor_layoutB).get_flat_coord(i));
-        // print("\n");
 
         print("Will do work for : ");
         print_tensor(each_threadC);
@@ -392,6 +368,6 @@ int main()
     // test_local_partition_vs_manual();
     // test_inner_partition();
     // test_outer_partition();
-    // test_local_partition_with_proj();
-    test_arrangement();
+    test_local_partition_with_proj();
+    // test_arrangement();
 }
