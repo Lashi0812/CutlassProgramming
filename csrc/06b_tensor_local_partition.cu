@@ -4,6 +4,7 @@
 #include <cute/underscore.hpp>
 #include <iostream>
 #include <vector>
+#include <utility>
 
 using namespace cute;
 using X = Underscore;
@@ -227,19 +228,155 @@ void test_local_partition_vs_manual()
     print_tensor(manual_tile);
     print("\n");
 
-    auto manual_part = manual_tile(make_coord(0,0),_);
+    auto manual_part = manual_tile(make_coord(0, 0), _);
     print("Element that Need by the thread0 : ");
     print_tensor(manual_part);
     print("\n");
 
-    auto local_tileA = local_tile(tensor,shape,make_coord(_,0));
-    auto local_partA = local_partition(local_tileA,shape,0);
+    auto local_tileA = local_tile(tensor, shape, make_coord(_, 0));
+    auto local_partA = local_partition(local_tileA, make_layout(shape), 0);
 
     print("Using the fn Element that Need by the thread0 : ");
-    print_tensor(local_partA); 
+    print_tensor(local_partA);
     print("\n");
 }
 
+void test_inner_partition()
+{
+    auto tensor_layout = make_layout(make_shape(_2{}, _2{}));
+    auto tile = make_shape(_2{}, _1{});
+    auto tensor = make_counting_tensor(tensor_layout);
+
+    print("Tensor :");
+    print_tensor(tensor);
+    print("\n");
+
+    auto zipped_div = zipped_divide(std::forward<decltype(tensor)>(tensor), tile);
+    print("Zipped Partition : ");
+    print_tensor(zipped_div);
+    print("\n");
+
+    for (int i{0}; i < size<1>(tensor); ++i)
+    {
+        auto inner_par = inner_partition(tensor, tile, i);
+        print("Inner Partition for %d: ", i);
+        print_tensor(inner_par);
+        print("\n");
+    }
+}
+
+void test_outer_partition()
+{
+    auto tensor_layout = make_layout(make_shape(_2{}, _2{}));
+    auto tile = make_shape(_1{}, _2{});
+    auto tensor = make_counting_tensor(tensor_layout);
+
+    print("Tensor :");
+    print_tensor(tensor);
+    print("\n");
+
+    auto zipped_div = zipped_divide(std::forward<decltype(tensor)>(tensor), tile);
+    print("Zipped Partition : ");
+    print_tensor(zipped_div);
+    print("\n");
+
+    for (int i{0}; i < size<0>(tensor); ++i)
+    {
+        auto inner_par = outer_partition(tensor, tile, i);
+        print("Inner Partition for %d: ", i);
+        print_tensor(inner_par);
+        print("\n");
+    }
+}
+
+void test_local_partition_with_proj()
+{
+    auto tensor_layoutC = make_layout(make_shape(_2{}, _2{}));
+    auto tensor_layoutA = make_layout(make_shape(_2{}, _3{}));
+    auto tensor_layoutB = make_layout(make_shape(_2{}, _3{}));
+
+    auto tileC = make_shape(_2{}, _2{});
+    auto tileA = make_shape(_1{}, _3{});
+    auto tileB = make_shape(_1{}, _3{});
+
+    std::vector<int> vecC{0, 1, 2, 3};
+    std::vector<int> vecA{4, 5, 6, 7, 8, 9};
+    std::vector<int> vecB{10, 11, 12, 13, 14, 15};
+
+    auto tensorA = make_tensor(vecA.data(), tensor_layoutA);
+    auto tensorB = make_tensor(vecB.data(), tensor_layoutB);
+    auto tensorC = make_tensor(vecC.data(), tensor_layoutC);
+    print("Tensor A: ");
+    print_tensor(tensorA);
+    print("\n");
+
+    print("Tensor B: ");
+    print_tensor(tensorB);
+    print("\n");
+
+    print("Tensor C: ");
+    print_tensor(tensorC);
+    print("\n");
+
+    for (int i{0}; i < size(tensorC); ++i)
+    {
+        auto each_threadA = inner_partition(tensorA, tileA, get<1>(tensorC.get_flat_coord(i)));
+        auto each_threadB = outer_partition(tensorB, tileB, get<0>(tensorC.get_flat_coord(i)));
+        auto each_threadC = local_partition(tensorC, tensor_layoutC, i, Step<_1, _1>{});
+        print("Thread %d :  \n", i);
+
+        // print("product each for A: ");
+        // print(product_each(shape(tensor_layoutA)));
+        // print("\n");
+
+        // print("product each for B: ");
+        // print(product_each(shape(tensor_layoutB)));
+        // print("\n");
+
+        // print("dice product each for A: ");
+        // print(dice(stepA, product_each(shape(tensor_layoutA))));
+        // print("\n");
+
+        // print("dice product each for B: ");
+        // print(dice(stepB, product_each(shape(tensor_layoutB))));
+        // print("\n");
+
+        // print("Coord A:  ");
+        // print(dice(stepA, tensor_layoutA).get_flat_coord(i));
+        // print("\n");
+
+        // print("Coord A:  ");
+        // print(dice(stepB, tensor_layoutB).get_flat_coord(i));
+        // print("\n");
+
+        print("Will do work for : ");
+        print_tensor(each_threadC);
+        print("Need A elements : ");
+        print_tensor(each_threadA);
+        print("Need B elements : ");
+        print_tensor(each_threadB);
+        print("\n");
+    }
+}
+
+void test_arrangement()
+{
+    auto M = _2{};
+    auto N = _3{};
+    auto K = _4{};
+
+    print("A Layout: ");
+    print_layout(make_layout(make_shape(M, K), make_stride(_1{}, M)));
+    print("\n");
+
+    print("B Layout: ");
+    print_layout(make_layout(make_shape(N, K), make_stride(_1{}, N)));
+    print("\n");
+
+    print("C Layout: ");
+    print_layout(make_layout(make_shape(M, N), make_stride(_1{}, M)));
+    print("\n");
+}
 
 int main()
 {
@@ -252,5 +389,9 @@ int main()
     // test_local_partition_warpC();
     // test_local_partition_thread();
     // test_single_tensor();
-    test_local_partition_vs_manual();
+    // test_local_partition_vs_manual();
+    // test_inner_partition();
+    // test_outer_partition();
+    // test_local_partition_with_proj();
+    test_arrangement();
 }
