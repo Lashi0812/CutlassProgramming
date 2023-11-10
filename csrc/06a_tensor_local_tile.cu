@@ -22,7 +22,7 @@ void test()
     // std::cout << local_tile(tensor, tile, coo, Step<X, _1, _1>{}) << std::endl;
     // std::cout << local_tile(tensor, tile, coo, Step<_1, _1, X>{}) << std::endl;
 
-    auto some2 = local_partition(some, Shape<_4, _4>{}, 1);
+    auto some2 = local_partition(some, Layout<Shape<_4, _4>>{}, 1);
     std::cout << some << std::endl;
     std::cout << some2 << std::endl;
 }
