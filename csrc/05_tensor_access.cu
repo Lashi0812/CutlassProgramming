@@ -269,6 +269,12 @@ void test_single_tensor()
     printf("%d",tensor(0));
 }
 
+void test_block_tensor()
+{
+    auto a = make_counting_tensor(make_layout(make_shape(make_shape(2,2),make_shape(2,2))));
+    print_tensor(a);
+}
+
 int main()
 {
     // test_access();
@@ -282,5 +288,6 @@ int main()
     // test_data_col_cute_row_transposed();
     // test_data_col_cute_col_transposed();
     // test_data_row_cute_col_not_transposed_2d();
-    test_single_tensor();
+    // test_single_tensor();
+    test_block_tensor();
 }
