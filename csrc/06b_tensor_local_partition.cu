@@ -292,11 +292,11 @@ void test_outer_partition()
 void test_local_partition_with_proj()
 {
     auto tensor_layoutC = make_layout(make_shape(_2{}, _2{}));
-    auto tensor_layoutA = make_layout(make_shape(_2{}, _3{}),GenRowMajor());
+    auto tensor_layoutA = make_layout(make_shape(_2{}, _3{}), GenRowMajor());
     auto tensor_layoutB = make_layout(make_shape(_2{}, _3{}));
 
     auto tileC = make_shape(_2{}, _2{});
-    auto tileA = make_shape(_1{}, _3{});
+    auto tileA = make_shape(_3{}, _1{});
     auto tileB = make_shape(_3{}, _1{});
 
     std::vector<int> vecC{0, 1, 2, 3};
@@ -320,7 +320,7 @@ void test_local_partition_with_proj()
 
     for (int i{0}; i < size(tensorC); ++i)
     {
-        auto each_threadA = inner_partition(tensorA, tileA, get<1>(tensorC.get_flat_coord(i)));
+        auto each_threadA = outer_partition(tensorA, tileA, get<1>(tensorC.get_flat_coord(i)));
         auto each_threadB = outer_partition(tensorB, tileB, get<0>(tensorC.get_flat_coord(i)));
         auto each_threadC = local_partition(tensorC, tensor_layoutC, i, Step<_1, _1>{});
         print("Thread %d :  \n", i);
@@ -354,6 +354,18 @@ void test_arrangement()
     print("\n");
 }
 
+void test_local_tile()
+{
+    auto tensor_layoutA = make_layout(make_shape(_8{}, _8{}));
+    auto tensor = make_counting_tensor(tensor_layoutA);
+
+    print_tensor(tensor);
+
+    auto tiled = local_tile(tensor,make_shape(_2{},_2{}),make_coord(_,0));
+    print_tensor(tiled);
+
+}
+
 int main()
 {
     // test_product_each();
@@ -368,6 +380,7 @@ int main()
     // test_local_partition_vs_manual();
     // test_inner_partition();
     // test_outer_partition();
-    test_local_partition_with_proj();
+    // test_local_partition_with_proj();
     // test_arrangement();
+    test_local_tile();
 }

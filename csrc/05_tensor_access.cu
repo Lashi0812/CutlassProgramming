@@ -259,6 +259,16 @@ void test_data_row_cute_col_not_transposed_2d()
     print("\n");
 }
 
+void test_single_tensor()
+{
+    // std::vector<int> vec{0};
+    // auto tensor = make_tensor(vec.data(),make_shape(_1{}));
+
+    int a = 10;
+    auto tensor = make_tensor(&a,make_shape(_1{}));
+    printf("%d",tensor(0));
+}
+
 int main()
 {
     // test_access();
@@ -272,4 +282,5 @@ int main()
     // test_data_col_cute_row_transposed();
     // test_data_col_cute_col_transposed();
     // test_data_row_cute_col_not_transposed_2d();
+    test_single_tensor();
 }
