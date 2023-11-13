@@ -22,9 +22,10 @@ __global__ void test_block_manual_access(const int *__restrict__ a)
         }
 }
 
-__global__ void test_zipped_access(const int *__restrict__ a)
+template <typename ALayout>
+__global__ void test_zipped_access(const int *__restrict__ a, ALayout la)
 {
-    auto tensor = make_tensor(make_gmem_ptr(a), make_shape(make_shape(blockDim.x, gridDim.x), make_shape(blockDim.y, gridDim.y)));
+    auto tensor = make_tensor(make_gmem_ptr(a), la);
     auto zipped = zipped_divide(tensor, make_shape(blockDim.x, blockDim.y));
 
     for (int blk{0}; blk < size<1>(zipped); ++blk)
@@ -32,15 +33,44 @@ __global__ void test_zipped_access(const int *__restrict__ a)
         {
             if (thread(thr, blk))
             {
+
                 print("Block id %d , thread %d : %d\n",
-                      blk, thr, zipped(make_coord(make_coord(threadIdx.x, threadIdx.y), make_coord(blockIdx.x, blockIdx.y))));
+                      blk, thr, zipped(thr, blk));
+
+                // print("Block id %d , thread %d : %d\n",
+                //       blk, thr, zipped(make_coord(make_coord(threadIdx.x, threadIdx.y), make_coord(blockIdx.x, blockIdx.y))));
+            }
+        }
+}
+
+template <typename ALayout>
+__global__ void test_zipped_trans_access(const int *__restrict__ a, ALayout la)
+{
+    auto tensor = make_tensor(make_gmem_ptr(a), la);
+    auto zipped = zipped_divide(tensor, make_shape(blockDim.y, blockDim.x));
+
+    for (int blk{0}; blk < size<1>(zipped); ++blk)
+        for (int thr{0}; thr < size<0>(zipped); ++thr)
+        {
+            if (thread(thr, blk))
+            {
+                // print("Block id %d , thread %d : %d\n",
+                //       blk, thr, zipped(thr,blk));
+
+                print("Block id %d , thread %d : %d\n",
+                      blk, thr, zipped(thr, make_coord(blockIdx.x, blockIdx.y)));
             }
         }
 }
 
 int main()
 {
-    auto a = at::arange(24, at::TensorOptions().dtype(at::kInt));
+    int M = Int<4>{};
+    int N = Int<6>{};
+
+    auto a = at::arange(M * N, at::TensorOptions().dtype(at::kInt));
+    auto layout = make_layout(make_shape(M, N));
+    auto trans_layout = make_layout(make_shape(N, M));
 
     int *d_a;
     cudaMalloc((void **)&d_a, a.numel() * a.element_size());
@@ -50,7 +80,8 @@ int main()
     dim3 grid(2, 2);
 
     // test_block_manual_access<<<grid, block>>>(d_a);
-    test_zipped_access<<<grid, block>>>(d_a);
+    // test_zipped_access<<<grid, block>>>(d_a, layout);
+    test_zipped_trans_access<<<grid, block>>>(d_a, trans_layout);
 
     cudaFree(d_a);
     cudaDeviceReset();
