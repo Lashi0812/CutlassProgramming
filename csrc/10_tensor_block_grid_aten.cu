@@ -67,6 +67,10 @@ int main()
 {
     int M = Int<4>{};
     int N = Int<6>{};
+    // auto a = at::arange(M * N, at::TensorOptions().dtype(at::kInt)).reshape({M,N});
+    // std::cout << a << std::endl;
+
+    // std::cout << a.index({at::indexing::Slice(at::indexing::None),at::indexing::Slice(0,2)}) << std::endl;
 
     auto a = at::arange(M * N, at::TensorOptions().dtype(at::kInt));
     auto layout = make_layout(make_shape(M, N));

@@ -99,14 +99,41 @@ void test_local_tile_vs_manual()
     print("\n");
 
     print("Manual All thread in all blocks in the 0th Col : ");
-    print_tensor(divided(_,make_coord(_,0)));
+    print_tensor(divided(_, make_coord(_, 0)));
     print("\n");
 
     print("Local tile All thread in all blocks in the 0th Col : ");
-    print_tensor(local_tile(tensor,shape,make_coord(_,0)));
+    print_tensor(local_tile(tensor, shape, make_coord(_, 0)));
     print("\n");
 }
 
+void test_local()
+{
+    std::vector<int> vec{10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33};
+    auto tensorA = make_tensor(vec.data(), make_layout(make_shape(_4{}, _6{}), GenRowMajor()));
+    auto tensorB = make_tensor(vec.data(), make_layout(make_shape(_6{}, _4{})));
+
+    print_tensor(tensorA);
+    auto tiledA = local_tile(tensorA, make_shape(_2{}, _3{}), make_coord(0, _));
+    print_tensor(tiledA);
+
+    print_tensor(tensorB);
+    auto tiledB = local_tile(tensorB, make_shape(_3{}, _2{}), make_coord(_, 0));
+    print_tensor(tiledB);
+}
+
+void test_local_tile_shared_to_rmem()
+{
+    auto tensor = make_counting_tensor(make_layout(make_shape(_2{},_2{})));
+    print_tensor(tensor);
+    auto tiled = local_tile(tensor,make_shape(_1{},_1{}),make_coord(_,0));
+    print_tensor(tiled);
+
+    auto part = local_partition(tiled,make_layout(make_shape(_1{},_1{})),0);
+    print_tensor(part);
+    
+
+}
 
 int main()
 {
@@ -114,5 +141,7 @@ int main()
     // test_repeat();
     // test_zipped();
     // test_local_tile();
-    test_local_tile_vs_manual();
+    // test_local_tile_vs_manual();
+    // test_local();
+    test_local_tile_shared_to_rmem();
 }
