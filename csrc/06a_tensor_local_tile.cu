@@ -124,15 +124,32 @@ void test_local()
 
 void test_local_tile_shared_to_rmem()
 {
-    auto tensor = make_counting_tensor(make_layout(make_shape(_2{},_2{})));
+    auto tensor = make_counting_tensor(make_layout(make_shape(_2{}, _2{})));
     print_tensor(tensor);
-    auto tiled = local_tile(tensor,make_shape(_1{},_1{}),make_coord(_,0));
+    auto tiled = local_tile(tensor, make_shape(_1{}, _1{}), make_coord(_, 0));
     print_tensor(tiled);
 
-    auto part = local_partition(tiled,make_layout(make_shape(_1{},_1{})),0);
+    auto part = local_partition(tiled, make_layout(make_shape(_1{}, _1{})), 0);
     print_tensor(part);
-    
+}
 
+void test_get_all_block()
+{
+    auto tensor = make_counting_tensor(make_layout(make_shape(4, 4)));
+    auto tiled = local_tile(tensor, make_shape(2, 2), make_coord(_, _));
+
+    print("Tensor : ");
+    print_tensor(tensor);
+    print("\n");
+    print("All Blocks in both axis: ");
+    print_tensor(tiled);
+    print("\n");
+    print("All Block for 0th row along axis1 : ");
+    print_tensor(tiled(_, _, 0, _));
+    print("\n");
+    print("All Block for 1th col along axis0 : ");
+    print_tensor(tiled(_, _, _, 1));
+    print("\n");
 }
 
 int main()
@@ -143,5 +160,6 @@ int main()
     // test_local_tile();
     // test_local_tile_vs_manual();
     // test_local();
-    test_local_tile_shared_to_rmem();
+    // test_local_tile_shared_to_rmem();
+    test_get_all_block();
 }
