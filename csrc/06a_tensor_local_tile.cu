@@ -152,6 +152,47 @@ void test_get_all_block()
     print("\n");
 }
 
+void test_1d_local_tileB()
+{
+    auto layoutC = make_layout(make_shape(_4{}, _4{}));
+    auto tensor = make_counting_tensor(make_layout(make_shape(_2{}, _4{})));
+    auto tile = make_shape(_2{}, _1{});
+
+    auto logicalC = zipped_divide(layoutC, tile);
+    print(logicalC);
+
+    print_tensor(tensor);
+
+    for (int i{0}; i < size(layoutC); ++i)
+    {
+        auto tiled = local_tile(tensor, tile, get<1>(logicalC.get_hier_coord(i)), Step<_0, _1>{});
+        print("For Thread %d :", i);
+        print_tensor(tiled);
+        print("\n");
+    }
+}
+
+void test_1d_local_tileA()
+{
+    auto layoutC = make_layout(make_shape(_4{}, _4{}));
+    auto tensor = make_counting_tensor(make_layout(make_shape(_4{}, _2{})));
+    auto tile = make_shape(_2{}, _1{});
+
+    auto logicalC = zipped_divide(layoutC, tile);
+    print(logicalC);
+
+    print_tensor(tensor);
+    for (int i{0}; i < size(layoutC); ++i)
+    {
+        print(logicalC.get_hier_coord(i));
+        print("\n");
+        auto tiled = local_tile(tensor, tile, get<1>(logicalC.get_hier_coord(i)), Step<_1, Underscore>{});
+        print("For Thread %d :", i);
+        print_tensor(tiled);
+        print("\n");
+    }
+}
+
 int main()
 {
     // test();
@@ -161,5 +202,7 @@ int main()
     // test_local_tile_vs_manual();
     // test_local();
     // test_local_tile_shared_to_rmem();
-    test_get_all_block();
+    // test_get_all_block();
+    test_1d_local_tileB();
+    test_1d_local_tileA();
 }
