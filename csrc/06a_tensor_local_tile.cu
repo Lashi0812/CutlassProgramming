@@ -2,6 +2,7 @@
 #include <cute/tile.hpp>
 #include <cute/underscore.hpp>
 #include <iostream>
+#include <numeric>
 
 using namespace cute;
 using X = Underscore;
@@ -154,18 +155,34 @@ void test_get_all_block()
 
 void test_1d_local_tileB()
 {
-    auto layoutC = make_layout(make_shape(_4{}, _4{}));
-    auto tensor = make_counting_tensor(make_layout(make_shape(_2{}, _4{})));
-    auto tile = make_shape(_2{}, _1{});
+    auto tile = make_shape(_1{}, _2{});
 
-    auto logicalC = zipped_divide(layoutC, tile);
-    print(logicalC);
+    auto tensorC = make_counting_tensor(make_layout(make_shape(_8{}, _8{})));
+    auto layoutC = local_tile(tensorC, make_shape(_4{}, _4{}), make_coord(0, 0));
 
-    print_tensor(tensor);
+    auto tensorB = make_counting_tensor(make_layout(make_shape(_8{}, _8{})));
+    auto tensorB_local_tile = local_tile(tensorB, make_shape(_4{}, _2{}), make_coord(0, _));
+
+    auto smemB = tensorB_local_tile(_, _, 0);
+
+    print("ThreadBlock need to work for block in C:\n");
+    print_tensor(layoutC);
+    print("\n");
+
+    print("Needed Element from B For ThreadBlock doing work :\n");
+    print_tensor(tensorB_local_tile);
+    print("\n");
+
+    print("Need Element moved to shared memory : \n");
+    print_tensor(smemB);
+    print("\n");
+
+    auto zip_div = zipped_divide(layoutC, tile);
+    print(zip_div);
 
     for (int i{0}; i < size(layoutC); ++i)
     {
-        auto tiled = local_tile(tensor, tile, get<1>(logicalC.get_hier_coord(i)), Step<_0, _1>{});
+        auto tiled = coalesce(local_tile(smemB, tile, replace_back(get<1>(zip_div.get_hier_coord(layout(layoutC)(i))),_)));
         print("For Thread %d :", i);
         print_tensor(tiled);
         print("\n");
@@ -174,24 +191,42 @@ void test_1d_local_tileB()
 
 void test_1d_local_tileA()
 {
-    auto layoutC = make_layout(make_shape(_4{}, _4{}));
-    auto tensor = make_counting_tensor(make_layout(make_shape(_4{}, _2{})));
-    auto tile = make_shape(_2{}, _1{});
+    // auto tile = make_tile(make_layout(_1{}),make_layout(_2{}));
+    auto tile = make_shape(_1{},_2{});
 
-    auto logicalC = zipped_divide(layoutC, tile);
-    print(logicalC);
+    auto tensorC = make_counting_tensor(make_layout(make_shape(_8{}, _8{})));
+    auto layoutC = local_tile(tensorC, make_shape(_4{}, _4{}), make_coord(0, 0));
 
-    print_tensor(tensor);
+    auto A = make_counting_tensor(make_layout(make_shape(_8{}, _8{})));
+    auto tensorA_local_tile = local_tile(A, make_shape(_2{}, _4{}), make_coord(_, 0));
+
+    auto smemA = tensorA_local_tile(_, _, 0);
+
+    print("ThreadBlock need to work for block in C:\n");
+    print_tensor(layoutC);
+    print("\n");
+
+    print("Needed Element from B For ThreadBlock doing work :\n");
+    print_tensor(tensorA_local_tile);
+    print("\n");
+
+    print("Need Element moved to shared memory : \n");
+    print_tensor(smemA);
+    print("\n");
+
+    auto zip_div = zipped_divide(layoutC, tile);
+    print_tensor(zip_div);
+
     for (int i{0}; i < size(layoutC); ++i)
     {
-        print(logicalC.get_hier_coord(i));
-        print("\n");
-        auto tiled = local_tile(tensor, tile, get<1>(logicalC.get_hier_coord(i)), Step<_1, Underscore>{});
+        auto tiled = coalesce(local_tile(smemA, tile, replace_front(get<1>(zip_div.get_hier_coord(layout(layoutC)(i))),_)));
         print("For Thread %d :", i);
         print_tensor(tiled);
         print("\n");
     }
 }
+
+
 
 int main()
 {
@@ -203,6 +238,6 @@ int main()
     // test_local();
     // test_local_tile_shared_to_rmem();
     // test_get_all_block();
-    test_1d_local_tileB();
-    test_1d_local_tileA();
+    // test_1d_local_tileB();
+    // test_1d_local_tileA();
 }

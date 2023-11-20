@@ -81,7 +81,7 @@ void test_zipped_divide()
     print("Zipped layout : ");
     print_tensor(divide_layout);
     print("\n");
-    
+
     print("Zipped tiled layout : ");
     print_tensor(divide_tile);
     print("\n");
@@ -119,11 +119,63 @@ void test_zipped_divide()
     print("\n");
 }
 
+void test_dice()
+{
+    auto layout = make_layout(make_shape(4, 2));
+    auto diced = dice(Step<Underscore, _1>{}, layout);
+    print("Layout : ");
+    print(layout);
+    print("\n");
+    print("Disced : ");
+    print(diced);
+    print("\n");
+}
+
+void test_product_each()
+{
+    auto layout = make_layout(make_shape(4, 2));
+    auto diced = dice(Step<Underscore, _1>{}, layout);
+    auto each = product_each(shape(diced));
+    print("Layout : ");
+    print(layout);
+    print("\n");
+    print("Disced : ");
+    print(diced);
+    print("\n");
+    print("Product Each: ");
+    print(each);
+    print("\n");
+}
+
+void test_product_each_zipped_div()
+{
+
+    auto layout = make_layout(make_shape(4, 2));
+    auto diced = dice(Step<Underscore, _1>{}, layout);
+    auto each = product_each(shape(diced));
+    auto zipped_div = zipped_divide(layout, each);
+    print("Layout : ");
+    print(layout);
+    print("\n");
+    print("Disced : ");
+    print(diced);
+    print("\n");
+    print("Product Each: ");
+    print(each);
+    print("\n");
+    print("Zipped divide: ");
+    print_layout(zipped_div);
+    print("\n");
+}
+
 int main()
 {
     // test_tensor_slice();
     // test_block_slice_in_block_product();
     // test_block_slice_in_zipped_product();
     // test_logical_divide();
-    test_zipped_divide();
+    // test_zipped_divide();
+    test_dice();
+    // test_product_each();
+    // test_product_each_zipped_div();
 }

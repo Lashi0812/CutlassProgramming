@@ -282,9 +282,9 @@ void test_outer_partition()
 
     for (int i{0}; i < size<0>(tensor); ++i)
     {
-        auto inner_par = outer_partition(tensor, tile, i);
-        print("Inner Partition for %d: ", i);
-        print_tensor(inner_par);
+        auto outer_par = outer_partition(tensor, tile, i);
+        print("Outer Partition for %d: ", i);
+        print_tensor(outer_par);
         print("\n");
     }
 }
@@ -295,7 +295,7 @@ void test_local_partition_with_proj()
     auto tensor_layoutA = make_layout(make_shape(_2{}, _3{}), GenRowMajor());
     auto tensor_layoutB = make_layout(make_shape(_2{}, _3{}));
 
-    auto tileC = make_shape(_2{}, _2{});
+    // auto tileC = make_shape(_2{}, _2{});
     auto tileA = make_shape(_3{}, _1{});
     auto tileB = make_shape(_3{}, _1{});
 
@@ -361,9 +361,88 @@ void test_local_tile()
 
     print_tensor(tensor);
 
-    auto tiled = local_tile(tensor,make_shape(_2{},_2{}),make_coord(_,0));
+    auto tiled = local_tile(tensor, make_shape(_2{}, _2{}), make_coord(_, 0));
     print_tensor(tiled);
+}
 
+void test_local_partition1dA()
+{
+    auto layoutA = make_layout(make_shape(4, 2));
+    auto tensorA = make_counting_tensor(layoutA);
+    auto threadLayoutA = make_layout(make_shape(2, 4));
+
+    print("Tensor Arrangement of A  : ");
+    print_tensor(tensorA);
+    print("\n");
+
+    auto partitionA = local_partition(tensorA, threadLayoutA, 0, Step<_1, Underscore>{});
+    print("Tensor Arrangement of A  : ");
+    print_tensor(partitionA);
+    print("\n");
+}
+
+void test_local_partitionCAndA()
+{
+    auto layoutC = make_layout(make_shape(4, 4));
+    auto layoutA = make_layout(make_shape(4, 2), GenRowMajor());
+
+    auto tensorC = make_counting_tensor(layoutC);
+    auto tensorA = make_counting_tensor(layoutA);
+
+    print("Tensor Arrangement of C  : ");
+    print_tensor(tensorC);
+    print("\n");
+    print("Tensor Arrangement of A  : ");
+    print_tensor(tensorA);
+    print("\n");
+
+    auto threadLayoutC = make_layout(make_shape(4, 2));
+    auto threadLayoutA = make_layout(make_shape(4, 2));
+
+    for (int i{0}; i < size(threadLayoutC); ++i)
+    {
+        auto partitionC = local_partition(tensorC, threadLayoutC, i);
+        auto partitionA = local_partition(tensorA, threadLayoutA, i, Step<Underscore, _1>{});
+        print("Thread %d ,\n", i);
+        print("\tTensor Partition of C  : \n");
+        print_tensor(partitionC);
+        print("\n");
+        print("\tTensor Partition of A  : \n");
+        print_tensor(partitionA);
+        print("\n");
+    }
+}
+
+void test_local_partitionCAndB()
+{
+    auto layoutC = make_layout(make_shape(4, 4));
+    auto layoutB = make_layout(make_shape(4, 2));
+
+    auto tensorC = make_counting_tensor(layoutC);
+    auto tensorB = make_counting_tensor(layoutB);
+
+    print("Tensor Arrangement of C  : ");
+    print_tensor(tensorC);
+    print("\n");
+    print("Tensor Arrangement of B  : ");
+    print_tensor(tensorB);
+    print("\n");
+
+    auto threadLayoutC = make_layout(make_shape(4, 2));
+    auto threadLayoutB = make_layout(make_shape(4, 2));
+
+    for (int i{0}; i < size(threadLayoutC); ++i)
+    {
+        auto partitionC = local_partition(tensorC, threadLayoutC, i);
+        auto partitionB = local_partition(tensorB, threadLayoutB, i, Step<_1, Underscore>{});
+        print("Thread %d ,\n", i);
+        print("\tTensor Partition of C  : \n");
+        print_tensor(partitionC);
+        print("\n");
+        print("\tTensor Partition of B  : \n");
+        print_tensor(partitionB);
+        print("\n");
+    }
 }
 
 int main()
@@ -382,5 +461,8 @@ int main()
     // test_outer_partition();
     // test_local_partition_with_proj();
     // test_arrangement();
-    test_local_tile();
+    // test_local_tile();
+    // test_local_partition1dA();
+    test_local_partitionCAndA();
+    test_local_partitionCAndB();
 }
