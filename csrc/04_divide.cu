@@ -33,13 +33,10 @@ void test_zipped_divide_vs_logical_divide()
 	print_tensor(tensor);
 	print("\n");
 
-	
-
 	auto log_divided = logical_divide(tensor, tile);
 	print("Logical divided : ");
 	print_tensor(log_divided);
 	print("\n");
-
 
 	auto zip_divided = zipped_divide(tensor, tile);
 	print("Zipped Divided : ");
@@ -49,24 +46,24 @@ void test_zipped_divide_vs_logical_divide()
 
 void test_single_tensor()
 {
-	auto a = make_layout(make_shape(_2{},_2{}));
+	auto a = make_layout(make_shape(_2{}, _2{}));
 	print_layout(a);
-	
-	print("%d \n",a(0));
-	print("%d \n",a(1));
-	print("%d \n",a(2));
-	print("%d \n",a(3));
 
-	print("%d \n",a(0,0));
-	print("%d \n",a(1,0));
-	print("%d \n",a(0,1));
-	print("%d \n",a(1,1));
+	print("%d \n", a(0));
+	print("%d \n", a(1));
+	print("%d \n", a(2));
+	print("%d \n", a(3));
+
+	print("%d \n", a(0, 0));
+	print("%d \n", a(1, 0));
+	print("%d \n", a(0, 1));
+	print("%d \n", a(1, 1));
 }
 
 void test_tile_vs_shape()
 {
 	auto tile = make_tile(make_layout(_2{}), make_layout(_3{}));
-	auto shape = make_shape(_2{},_3{});
+	auto shape = make_shape(_2{}, _3{});
 	auto tensor_layout = make_layout(make_shape(_8{}, Int<15>{}));
 
 	auto tensor = make_counting_tensor(tensor_layout);
@@ -85,10 +82,21 @@ void test_tile_vs_shape()
 	print("\n");
 }
 
+void test_zipped_div_1d()
+{
+	auto layout = make_layout(make_shape(4, 2), make_stride(8, 1));
+	auto zip_div = zipped_divide(layout, make_shape(2));
+	print("Zipped shape Divided : ");
+	print_layout(zip_div);
+	print("\n");
+	print_layout(zip_div(make_coord(make_coord(0),make_coord(_,_))));
+}
+
 int main()
 {
 	// test_logical_divide();
 	// test_zipped_divide_vs_logical_divide();
 	// test_single_tensor();
-	test_tile_vs_shape();
+	// test_tile_vs_shape();
+	test_zipped_div_1d();
 }
