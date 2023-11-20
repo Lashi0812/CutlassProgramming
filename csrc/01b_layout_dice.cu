@@ -21,7 +21,7 @@ void test_dice()
 
 void test_dice1()
 {
-    auto layout = make_layout(make_shape(_4{}, _4{}));
+    auto layout = make_layout(make_shape(_4{}, _2{}));
     print(layout);
     print("\n");
     print(dice(Step<_0, _0>{}, layout));
@@ -33,6 +33,8 @@ void test_dice1()
     print(dice(Step<_1, _0>{}, layout));
     print("\n");
     print(dice(Step<_1, Underscore>{}, layout));
+    print("\n");
+    print(dice(Step<Underscore,_1>{}, layout));
     print("\n");
 }
 
