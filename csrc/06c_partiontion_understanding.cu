@@ -162,7 +162,7 @@ void test_block_tile_chunk_tile_thread_part(TensorLayout tensor_layout, BlockTil
 
 template <typename TensorLayout, typename BlockTile, typename ChunkTile,
           typename SMEMShape, typename ThreadLayout, typename ThreadStep>
-void test_block_tile_chunk_tile_copy_smem_thread_part(TensorLayout tensor_layout, BlockTile blk_tiler, ChunkTile chk_tiler,
+void test_block_tile_chunk_tile_copy_smem_thread_partA(TensorLayout tensor_layout, BlockTile blk_tiler, ChunkTile chk_tiler,
                                                       SMEMShape smem_shape, ThreadLayout th_layout, ThreadStep)
 {
     std::vector<int> smem(size(smem_shape));
@@ -259,7 +259,7 @@ int main()
         auto chk_tiler = make_shape(2, 4);
         auto smem_shape = make_shape(4, 2);
         auto th_layout = make_layout(make_shape(4, 2));
-        test_block_tile_chunk_tile_copy_smem_thread_part(tensor_layout, blk_tiler, chk_tiler,
+        test_block_tile_chunk_tile_copy_smem_thread_partA(tensor_layout, blk_tiler, chk_tiler,
                                                          smem_shape, th_layout, Step<Underscore, _1>{});
     }
 }
