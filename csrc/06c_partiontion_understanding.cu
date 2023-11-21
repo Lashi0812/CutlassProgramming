@@ -163,7 +163,7 @@ void test_block_tile_chunk_tile_thread_part(TensorLayout tensor_layout, BlockTil
 template <typename TensorLayout, typename BlockTile, typename ChunkTile,
           typename SMEMShape, typename ThreadLayout, typename ThreadStep>
 void test_block_tile_chunk_tile_copy_smem_thread_partA(TensorLayout tensor_layout, BlockTile blk_tiler, ChunkTile chk_tiler,
-                                                      SMEMShape smem_shape, ThreadLayout th_layout, ThreadStep)
+                                                       SMEMShape smem_shape, ThreadLayout th_layout, ThreadStep)
 {
     std::vector<int> smem(size(smem_shape));
 
@@ -195,6 +195,40 @@ void test_block_tile_chunk_tile_copy_smem_thread_partA(TensorLayout tensor_layou
                 print_tensor(th_tiled);
                 print("\n");
             }
+        }
+    }
+}
+
+template <typename TensorLayout, typename BlockTile, typename BlockCoord,
+          typename SMEMLayout, typename ThreadLayout, typename ThreadStep>
+void test_block_tile_chunk_tile_copy_smem_thread_partB(TensorLayout tensor_layout, BlockTile blk_tiler, BlockCoord blk_coord,
+                                                       SMEMLayout smem_layout, ThreadLayout th_layout, ThreadStep)
+{
+    std::vector<int> smem(size(smem_layout));
+
+    auto tensor = make_counting_tensor(tensor_layout);
+    auto smem_tensor = make_tensor(smem.data(), smem_layout);
+
+    auto blk_tiled = local_tile(tensor, blk_tiler, blk_coord);
+    print("Block : ");
+    print_tensor(blk_tiled);
+    print("\n");
+    for (int chk_idx{0}; chk_idx < size<2>(blk_tiled); ++chk_idx)
+    {
+        auto chk_tiled = blk_tiled(_, _, chk_idx);
+        copy(chk_tiled, smem_tensor);
+        print("\tChunk %d : ", chk_idx);
+        print_tensor(chk_tiled);
+        print("\n");
+        print("\tSmem Data for Chunk %d : ", chk_idx);
+        print_tensor(smem_tensor);
+        print("\n");
+        for (int th_idx{0}; th_idx < size(th_layout); ++th_idx)
+        {
+            auto th_tiled = local_partition(smem_tensor, th_layout, th_idx, ThreadStep{});
+            print("\tThread %d : ", th_idx);
+            print_tensor(th_tiled);
+            print("\n");
         }
     }
 }
@@ -248,18 +282,29 @@ int main()
     //     test_block_tile_chunk_tile_thread_part(tensor_layout, blk_tiler, chk_tiler, th_layout);
     // }
 
+    // {
+    //     // 9 partition
+    //     // Same as 8 but in cute way
+    //     // mode1 x mode0
+    //     // chunk_tile ===> 4x2
+    //     // cute_chunk_tile ==> 2,4
+    //     auto tensor_layout = make_layout(make_shape(8, 8));
+    //     auto blk_tiler = make_shape(4, 4);
+    //     auto chk_tiler = make_shape(2, 4);
+    //     auto smem_shape = make_shape(4, 2);
+    //     auto th_layout = make_layout(make_shape(4, 2));
+    //     test_block_tile_chunk_tile_copy_smem_thread_partA(tensor_layout, blk_tiler, chk_tiler,
+    //                                                      smem_shape, th_layout, Step<Underscore, _1>{});
+    // }
+
     {
-        // 9 partition
-        // Same as 8 but in cute way
-        // mode1 x mode0
-        // chunk_tile ===> 4x2
-        // cute_chunk_tile ==> 2,4
+        // 10 partition
         auto tensor_layout = make_layout(make_shape(8, 8));
-        auto blk_tiler = make_shape(4, 4);
-        auto chk_tiler = make_shape(2, 4);
+        auto blk_tiler = make_shape(4, 2);
+        auto blk_coord = make_coord(0, _);
         auto smem_shape = make_shape(4, 2);
         auto th_layout = make_layout(make_shape(4, 2));
-        test_block_tile_chunk_tile_copy_smem_thread_partA(tensor_layout, blk_tiler, chk_tiler,
-                                                         smem_shape, th_layout, Step<Underscore, _1>{});
+        test_block_tile_chunk_tile_copy_smem_thread_partB(tensor_layout, blk_tiler, blk_coord,
+                                                          smem_shape, th_layout, Step<_1, Underscore>{});
     }
 }
