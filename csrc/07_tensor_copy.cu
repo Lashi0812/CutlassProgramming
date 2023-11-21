@@ -101,7 +101,7 @@ void test_copy(SrcLayout src_layout, DstLayout dst_layout, bool manual = false)
     print("\n");
 
     print("Destination Tensor : ");
-    print_tensor(make_tensor(dst_vec.data(),make_layout(shape(dst_layout))));
+    print_tensor(make_tensor(dst_vec.data(),make_layout(shape(dst_layout),GenRowMajor())));
     print("\n");
 }
 
@@ -119,7 +119,7 @@ int main()
     {
         // row col copy
         auto src_layout = make_layout(make_shape(2, 4));
-        auto dst_layout = make_layout(make_shape(4, 2),GenRowMajor());
+        auto dst_layout = make_layout(make_shape(4, 2));
         test_copy(src_layout, dst_layout);
     }
     {
