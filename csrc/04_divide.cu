@@ -89,7 +89,23 @@ void test_zipped_div_1d()
 	print("Zipped shape Divided : ");
 	print_layout(zip_div);
 	print("\n");
-	print_layout(zip_div(make_coord(make_coord(0),make_coord(_,_))));
+	print_layout(zip_div(make_coord(make_coord(0), make_coord(_, _))));
+}
+
+template <typename TensorLayout, typename ThreadLayout, typename ThreadStep>
+void test_local_part_1d(TensorLayout layout, ThreadLayout thread_layout, ThreadStep)
+{
+	// auto layout = make_layout(make_shape(4, 2));
+	// auto thread_layout = make_layout(make_shape(2, 4));
+	auto tensor = make_counting_tensor(layout);
+	print_tensor(tensor);
+	for (int i{0}; i < size(thread_layout); ++i)
+	{
+		auto part = local_partition(tensor, thread_layout, i, ThreadStep{});
+		print("Partition for Thread %d : ", i);
+		print_tensor(part);
+		print("\n");
+	}
 }
 
 int main()
@@ -98,5 +114,15 @@ int main()
 	// test_zipped_divide_vs_logical_divide();
 	// test_single_tensor();
 	// test_tile_vs_shape();
-	test_zipped_div_1d();
+	// test_zipped_div_1d();
+	{
+		auto layout = make_layout(make_shape(4, 2));
+		auto thread_layout = make_layout(make_shape(2, 4));
+		test_local_part_1d(layout, thread_layout, Step<_1, Underscore>{});
+	}
+	{
+		auto layout = make_layout(make_shape(4, 2));
+		auto thread_layout = make_layout(make_shape(4, 2));
+		test_local_part_1d(layout, thread_layout, Step<Underscore, _1>{});
+	}
 }
