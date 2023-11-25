@@ -11,7 +11,8 @@ RUN --mount=type=cache,target=/var/cache/apt \
                    curl \
                    wget \
                    zsh \
-                   ca-certificates 
+                   ca-certificates \
+                   texlive-full
 
 # instal conda 
 RUN mkdir ~/miniconda3 && \

@@ -13,7 +13,8 @@
                 "streetsidesoftware.code-spell-checker",
                 "ms-vscode.cmake-tools" ,
                 "NVIDIA.nsight-vscode-edition",
-                "augustocdias.tasks-shell-input"
+                "augustocdias.tasks-shell-input",
+                "James-Yu.latex-workshop"
 
             ],
             "settings": {
