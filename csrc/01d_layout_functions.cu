@@ -99,10 +99,34 @@ void test_find_if_examples()
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Compact Col Major
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Shape>
+void test_compact_col_major()
+{
+    auto res = compact_col_major(Shape{});
+    print("Input  : ");
+    print(Shape{});
+    print("\n");
+    print("Output : ");
+    print(res);
+    print("\n");
+}
+
+void test_compact_col_major_examples()
+{
+    test_compact_col_major<Shape<_4>>();
+    test_compact_col_major<Shape<_4, _2>>();
+    test_compact_col_major<Shape<_4, _2, _8>>();
+}
+
 int main()
 {
     // test_transform_leaf_examples();
     // test_transform_examples();
     // test_find_examples();
-    test_find_if_examples();
+    // test_find_if_examples();
+    test_compact_col_major_examples();
 }
