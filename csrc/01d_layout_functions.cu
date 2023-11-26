@@ -122,11 +122,35 @@ void test_compact_col_major_examples()
     test_compact_col_major<Shape<_4, _2, _8>>();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Inverse seq
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <int Start,typename Shape, typename Stride>
+void test_inverse_seq()
+{
+    auto res = detail::inverse_seq<Start>(Shape{}, Stride{}, seq<>{});
+
+    // clang-format off
+    print("Input  : ");print(Shape{});print(Stride{});print("\n");
+    print("Output : ");print(res);print("\n");
+    // clang-format on
+}
+
+void test_inverse_seq_examples()
+{   
+    test_inverse_seq<1,tuple<_4>,tuple<_1>>();
+    test_inverse_seq<1,tuple<_4,_4>,tuple<_1,_4>>();
+    test_inverse_seq<1,tuple<_4,_4>,tuple<_1,_5>>();
+    test_inverse_seq<1,tuple<_4,_5>,tuple<_1,_4>>();
+}
+
 int main()
 {
     // test_transform_leaf_examples();
     // test_transform_examples();
     // test_find_examples();
     // test_find_if_examples();
-    test_compact_col_major_examples();
+    // test_compact_col_major_examples();
+    test_inverse_seq_examples();
 }
