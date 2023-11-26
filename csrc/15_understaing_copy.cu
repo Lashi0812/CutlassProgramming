@@ -57,9 +57,59 @@ void test_copy_trait_examples()
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Start of Copy Atom
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template<typename S,typename D,typename T>
+void test_copy_atom()
+{
+    using copy_atom = Copy_Atom<Copy_Traits<SM80_CP_ASYNC_CACHEALWAYS<S,D>>,T>;
+
+    print("Bit Source Layout : \n");
+    print_latex(typename copy_atom::BitLayoutSrc{});
+    print("\n");
+    print("Value Source Layout : \n");
+    print_latex(typename copy_atom::ValLayoutSrc{});
+    print("\n");
+
+    print("Bit Destination Layout : \n");
+    print_latex(typename copy_atom::BitLayoutDst{});
+    print("\n");
+    print("Value Destination Layout : \n");
+    print_latex(typename copy_atom::ValLayoutDst{});
+    print("\n");
+
+    print("Bit Reference Layout : \n");
+    print_latex(typename copy_atom::BitLayoutRef{});
+    print("\n");
+    print("Value Reference Layout : \n");
+    print_latex(typename copy_atom::ValLayoutRef{});
+    print("\n");
+}
+
+void test_copy_atom_examples()
+{
+    {
+        test_copy_atom<int,int,int8_t>();
+    }
+    {
+        test_copy_atom<uint128_t,uint128_t,half_t>();
+    }
+    {
+        test_copy_atom<uint128_t,uint128_t,int4_t>();
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              End of Copy Atom
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 
 
 int main()
 {
-    test_copy_trait_examples();
+    // test_copy_trait_examples();
+    test_copy_atom_examples();
 }
