@@ -66,13 +66,43 @@ void test_find()
 
 void test_find_examples()
 {
-    test_find<tuple<_1,_4,_5,_2,_6>,_4>();
-    test_find<tuple<_1,_4,_5,_2,_6>,_5>();
+    test_find<tuple<_1, _4, _5, _2, _6>, _4>();
+    test_find<tuple<_1, _4, _5, _2, _6>, _5>();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Find if
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename T, typename F>
+void test_find_if(T t, F &&f)
+{
+    auto res = find_if(T{}, f);
+
+    // clang-format off
+    print("Input  : ");print(T{});print("\n");
+    print("Output : ");print(res);print("\n");
+    // clang-format on
+}
+
+void test_find_if_examples()
+{
+    {
+        print("Find the Value which greater than 5 and return index : \n");
+        test_find_if(tuple<_1, _2, _5, _7>{}, [&](auto const &i)
+                     { return greater{}(i, _5{}); });
+    }
+    {
+        print("Find the Value which equal to 5 and return index : \n");
+        test_find_if(tuple<_1, _2, _5, _7>{}, [&](auto const &i)
+                     { return equal_to{}(i, _5{}); });
+    }
 }
 
 int main()
 {
     // test_transform_leaf_examples();
     // test_transform_examples();
-    test_find_examples();
+    // test_find_examples();
+    test_find_if_examples();
 }
