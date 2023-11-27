@@ -331,7 +331,26 @@ void test_append_examples()
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          Raked product
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
+template <typename Tile, typename MatOfTiles>
+void test_raked_product(int ps)
+{
+    auto res = raked_product(Tile{}, MatOfTiles{});
+
+    // clang-format off
+    print("Input  : ");custom_print(Tile{},ps);print(" , ");custom_print(MatOfTiles{},ps);print("\n");
+    print("Output : ");custom_print(res,ps);print("\n");
+    // clang-format on
+}
+
+void test_raked_product_examples(int ps)
+{
+    test_raked_product<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                       Layout<Shape<_1, _8>>>(ps);
+}
 
 int main(int argc, char *argv[])
 {
@@ -350,5 +369,6 @@ int main(int argc, char *argv[])
     // test_composition_examples(ps);
     // test_RIRCS_examples(ps);
     // test_rank_examples();
-    test_append_examples();
+    // test_append_examples();
+    test_raked_product_examples(ps);
 }
