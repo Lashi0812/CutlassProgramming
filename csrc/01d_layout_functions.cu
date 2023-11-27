@@ -2,6 +2,23 @@
 
 using namespace cute;
 
+template <typename Args>
+void custom_print(Args args, int ps = -1)
+{
+    switch (ps)
+    {
+    case 0:
+        print_layout(args);
+        break;
+    case 1:
+        print_latex(args);
+        break;
+    default:
+        print(args);
+        break;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                              Transform Leaf
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +143,7 @@ void test_compact_col_major_examples()
 //                              Inverse seq
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <int Start,typename Shape, typename Stride>
+template <int Start, typename Shape, typename Stride>
 void test_inverse_seq()
 {
     auto res = detail::inverse_seq<Start>(Shape{}, Stride{}, seq<>{});
@@ -138,43 +155,75 @@ void test_inverse_seq()
 }
 
 void test_inverse_seq_examples()
-{   
-    test_inverse_seq<1,tuple<_4>,tuple<_1>>();
-    test_inverse_seq<1,tuple<_4,_4>,tuple<_1,_4>>();
-    test_inverse_seq<1,tuple<_4,_4>,tuple<_1,_5>>();
-    test_inverse_seq<1,tuple<_4,_5>,tuple<_1,_4>>();
+{
+    test_inverse_seq<1, tuple<_4>, tuple<_1>>();
+    test_inverse_seq<1, tuple<_4, _4>, tuple<_1, _4>>();
+    test_inverse_seq<1, tuple<_4, _4>, tuple<_1, _5>>();
+    test_inverse_seq<1, tuple<_4, _5>, tuple<_1, _4>>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                              Right Inverse
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename Shape, typename Stride>
-void test_right_inverse()
+template <typename Layout>
+void test_right_inverse(int ps)
 {
-    auto res = right_inverse(Layout<Shape,Stride>{});
+    auto res = right_inverse(Layout{});
 
     // clang-format off
-    print("Input  : ");print(Shape{});print(Stride{});print("\n");
+    print("Input  : ");print(Layout{});print("\n");
     print("Output : ");print(res);print("\n");
     // clang-format on
 }
 
-void test_right_inverse_examples()
-{   
-    test_right_inverse<tuple<_4>,tuple<_1>>();
-    test_right_inverse<tuple<_4,_4>,tuple<_1,_4>>();
-    test_right_inverse<tuple<_4,_4>,tuple<_1,_5>>();
-    test_right_inverse<tuple<_4,_5>,tuple<_1,_4>>();
+void test_right_inverse_examples(int ps)
+{
+    test_right_inverse<Layout<Shape<_4>, Stride<_1>>>(ps);
+    test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _4>>>(ps);
+    test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _5>>>(ps);
+    test_right_inverse<Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
+    test_right_inverse<Layout<Shape<_4, _5>, Stride<_5, _1>>>(ps);
 }
 
-int main()
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Composition
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename A, typename B>
+void test_composition(int ps)
 {
+    auto res = composition(A{}, B{});
+
+    // clang-format off
+    print("Input  : ");custom_print(A{},ps);print(" , ");custom_print(B{},ps);print("\n");
+    print("Output : ");custom_print(res,ps);print("\n");
+    // clang-format on
+}
+
+void test_composition_examples(int ps)
+{
+
+    test_composition<Layout<Shape<Int<20>, _2>, Stride<_16, _4>>,
+                     Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
+
+    test_composition<Layout<Shape<_2, _32>, Stride<_32, _1>>,
+                     Layout<Shape<Shape<_8, _4>, _8>, Stride<Stride<_8, _0>, _1>>>(ps);
+}
+
+int main(int argc, char *argv[])
+{
+    // print_select
+    int ps{-1};
+    if (argc >= 2)
+        ps = atoi(argv[1]);
+
     // test_transform_leaf_examples();
     // test_transform_examples();
     // test_find_examples();
     // test_find_if_examples();
     // test_compact_col_major_examples();
     // test_inverse_seq_examples();
-    test_right_inverse_examples();
+    // test_right_inverse_examples(ps);
+    test_composition_examples(ps);
 }
