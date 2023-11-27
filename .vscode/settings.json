@@ -1,5 +1,7 @@
 {
     "cSpell.ignoreWords": [
+        "RIFCS",
+        "RIRCS",
         "cosize",
         "endforeach",
         "forceinline",
@@ -79,7 +81,13 @@
         "thread": "cpp",
         "typeindex": "cpp",
         "valarray": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "__locale": "cpp",
+        "__bit_reference": "cpp",
+        "__hash_table": "cpp",
+        "__string": "cpp",
+        "__tree": "cpp"
     },
-    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools"
+    "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
+    "latex-workshop.latex.outDir":"/workspaces/CutlassProgramming/layouts"
 }
