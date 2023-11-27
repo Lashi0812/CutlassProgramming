@@ -266,7 +266,8 @@ void test_rank()
 void test_rank_examples()
 {
     test_rank<Layout<Shape<_1>>>();
-    test_rank<Layout<Shape<_1, _2>>>();
+    test_rank<Layout<Shape<_16, _8>, Stride<_8, _1>>>();
+    test_rank<Layout<Shape<_1, _8>>>();
     test_rank<Layout<Shape<Shape<_2, _4>, _2>>>();
     test_rank<Layout<Shape<Shape<_2, _4>, _2, _1>>>();
     test_rank<Layout<Shape<Shape<_2, _4>, _2, _0>>>();
