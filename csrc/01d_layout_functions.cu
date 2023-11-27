@@ -273,6 +273,66 @@ void test_rank_examples()
     test_rank<Layout<Shape<Shape<_2, _4>, _2, _0>>>();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Append
+// If N is less than size tuple throw error
+// if N is equal to size of tuple return same tuple
+// if N is great than size of tuple then append up to N.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename T, typename X, int N>
+void test_append()
+{
+    auto res = append<N>(T{}, X{});
+
+    // clang-format off
+    print("Input  : ");print(T{});print(" , ");print(X{});print("\n");
+    print("Output : ");print(res);print("\n");
+    // clang-format on
+}
+
+void test_append_examples()
+{
+    // {
+    //     print("Append at 1st position \n");
+    //     test_append<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+    //                 Layout<_1>,
+    //                 1>();
+    //     test_append<Layout<Shape<_1, _8>>,
+    //                 Layout<_1>,
+    //                 1>();
+    // }
+    {
+        print("Append at 2nd position \n");
+        test_append<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                    Layout<_1>,
+                    2>();
+        test_append<Layout<Shape<_1, _8>>,
+                    Layout<_1>,
+                    2>();
+    }
+
+    {
+        print("Append at 3rd position \n");
+        test_append<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                    Layout<_1>,
+                    3>();
+        test_append<Layout<Shape<_1, _8>>,
+                    Layout<_1>,
+                    3>();
+    }
+    {
+        print("Append at 4th position \n");
+        test_append<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                    Layout<_2>,
+                    4>();
+        test_append<Layout<Shape<_1, _8>>,
+                    Layout<_2>,
+                    4>();
+    }
+}
+
+
+
 int main(int argc, char *argv[])
 {
     // print_select
@@ -289,5 +349,6 @@ int main(int argc, char *argv[])
     // test_right_inverse_examples(ps);
     // test_composition_examples(ps);
     // test_RIRCS_examples(ps);
-    test_rank_examples();
+    // test_rank_examples();
+    test_append_examples();
 }
