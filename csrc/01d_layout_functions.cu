@@ -185,6 +185,8 @@ void test_right_inverse_examples(int ps)
     test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _5>>>(ps);
     test_right_inverse<Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
     test_right_inverse<Layout<Shape<_4, _5>, Stride<_5, _1>>>(ps);
+    test_right_inverse<Layout<Shape<_16, Shape<_8, _8>>,
+                              Stride<_8, Stride<_128, _1>>>>(ps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -352,6 +354,27 @@ void test_raked_product_examples(int ps)
                        Layout<Shape<_1, _8>>>(ps);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          With Shape
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Layout, typename Shape>
+void test_with_shape(int ps)
+{
+    auto res = Layout{}.with_shape(Shape{});
+
+    // clang-format off
+    print("Input  : ");custom_print(Layout{},ps);print(" , ");print(Shape{});print("\n");
+    print("Output : ");custom_print(res,ps);print("\n");
+    // clang-format on
+}
+
+void test_with_shape_examples(int ps)
+{
+    test_with_shape<Layout<Shape<_8, _128>, Stride<_128, _1>>,
+                    Shape<_128, _8>>(ps);
+}
+
 int main(int argc, char *argv[])
 {
     // print_select
@@ -370,5 +393,6 @@ int main(int argc, char *argv[])
     // test_RIRCS_examples(ps);
     // test_rank_examples();
     // test_append_examples();
-    test_raked_product_examples(ps);
+    // test_raked_product_examples(ps);
+    test_with_shape_examples(ps);
 }
