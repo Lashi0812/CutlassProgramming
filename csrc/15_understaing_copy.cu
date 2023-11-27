@@ -129,9 +129,37 @@ void test_make_tiled_copy_examples()
                          Layout<Shape<_1, _8>, Stride<_0, _1>>>();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Understanding the function in Tiled Copy
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename ThrLayout, typename ValLayout>
+void test_get_layouts()
+{
+    auto tiled_copy = make_tiled_copy(Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>{},
+                                      ThrLayout{}, ValLayout{});
+
+    // clang-format off
+    print("Thread Layout : ");print(ThrLayout{});print("\n");
+    print("Value  Layout : ");print(ValLayout{});print("\n");
+    print(tiled_copy);
+    print("Layouts S_TV : ");print(tiled_copy.get_layoutS_TV());print("\n");
+    print("Layouts S_MN : ");print(tiled_copy.get_layoutS_MN());print("\n");
+    print("Layouts D_TV : ");print(tiled_copy.get_layoutD_TV());print("\n");
+    print("Layouts D_MN : ");print(tiled_copy.get_layoutD_MN());print("\n");
+    // clang-format on
+}
+
+void test_get_layouts_examples()
+{
+    test_get_layouts<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                         Layout<Shape<_1, _8>, Stride<_0, _1>>>();
+}
+
 int main()
 {
     // test_copy_trait_examples();
     // test_copy_atom_examples();
-    test_make_tiled_copy_examples();
+    // test_make_tiled_copy_examples();
+    test_get_layouts_examples();
 }
