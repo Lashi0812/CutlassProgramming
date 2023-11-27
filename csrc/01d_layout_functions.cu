@@ -233,6 +233,7 @@ void test_RIRCS_examples(int ps)
     {
         print("Source : 128b , Val : 16b \n");
         using copy_atom = Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>;
+        print(copy_atom{});
         test_RIRCS<typename copy_atom::ValLayoutRef, typename copy_atom::ValLayoutSrc>(ps);
         print("\n");
     }
@@ -240,6 +241,7 @@ void test_RIRCS_examples(int ps)
     {
         print("Source : 128b , Val : 8b \n");
         using copy_atom = Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, int8_t>;
+        print(copy_atom{});
         test_RIRCS<typename copy_atom::ValLayoutRef, typename copy_atom::ValLayoutSrc>(ps);
         print("\n");
     }

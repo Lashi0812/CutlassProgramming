@@ -1,3 +1,5 @@
 build/
 playground/
 *.gz
+*.auxlock
+*-figure0.md5
