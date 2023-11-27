@@ -247,6 +247,31 @@ void test_RIRCS_examples(int ps)
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Rank
+// Number of mode in layout is rank.
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Layout>
+void test_rank()
+{
+    auto res = rank_v<Layout>;
+    print("Rank of Layout : ");
+    print(Layout{});
+    print(" is : ");
+    print(res);
+    print("\n");
+}
+
+void test_rank_examples()
+{
+    test_rank<Layout<Shape<_1>>>();
+    test_rank<Layout<Shape<_1, _2>>>();
+    test_rank<Layout<Shape<Shape<_2, _4>, _2>>>();
+    test_rank<Layout<Shape<Shape<_2, _4>, _2, _1>>>();
+    test_rank<Layout<Shape<Shape<_2, _4>, _2, _0>>>();
+}
+
 int main(int argc, char *argv[])
 {
     // print_select
@@ -262,5 +287,6 @@ int main(int argc, char *argv[])
     // test_inverse_seq_examples();
     // test_right_inverse_examples(ps);
     // test_composition_examples(ps);
-    test_RIRCS_examples(ps);
+    // test_RIRCS_examples(ps);
+    test_rank_examples();
 }
