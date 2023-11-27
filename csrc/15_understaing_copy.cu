@@ -56,15 +56,14 @@ void test_copy_trait_examples()
 //                              End of Copy traits
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                              Start of Copy Atom
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template<typename S,typename D,typename T>
+template <typename S, typename D, typename T>
 void test_copy_atom()
 {
-    using copy_atom = Copy_Atom<Copy_Traits<SM80_CP_ASYNC_CACHEALWAYS<S,D>>,T>;
+    using copy_atom = Copy_Atom<Copy_Traits<SM80_CP_ASYNC_CACHEALWAYS<S, D>>, T>;
 
     print("Bit Source Layout : \n");
     print_latex(typename copy_atom::BitLayoutSrc{});
@@ -91,25 +90,48 @@ void test_copy_atom()
 void test_copy_atom_examples()
 {
     {
-        test_copy_atom<int,int,int8_t>();
+        test_copy_atom<int, int, int8_t>();
     }
     {
-        test_copy_atom<uint128_t,uint128_t,half_t>();
+        test_copy_atom<uint128_t, uint128_t, half_t>();
     }
     {
-        test_copy_atom<uint128_t,uint128_t,int4_t>();
+        test_copy_atom<uint128_t, uint128_t, int4_t>();
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                              End of Copy Atom
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Make tiled Copy
+//  Produce the TiledCopy from the logical thread and Value layouts
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
+template <typename ThrLayout, typename ValLayout>
+void test_make_tiled_copy()
+{
+    auto res = make_tiled_copy(Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>{},
+                               ThrLayout{}, ValLayout{});
 
+    print("Thread Layout : ");
+    print(ThrLayout{});
+    print("\n");
+    print("Value  Layout : ");
+    print(ValLayout{});
+    print("\n");
+    print(res);
+}
 
+void test_make_tiled_copy_examples()
+{
+    test_make_tiled_copy<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                         Layout<Shape<_1, _8>, Stride<_0, _1>>>();
+}
 
 int main()
 {
     // test_copy_trait_examples();
-    test_copy_atom_examples();
+    // test_copy_atom_examples();
+    test_make_tiled_copy_examples();
 }
