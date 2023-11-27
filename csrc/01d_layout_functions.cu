@@ -1,4 +1,5 @@
 #include <cute/layout.hpp>
+#include <cute/algorithm/copy.hpp>
 
 using namespace cute;
 
@@ -211,10 +212,43 @@ void test_composition_examples(int ps)
                      Layout<Shape<Shape<_8, _4>, _8>, Stride<Stride<_8, _0>, _1>>>(ps);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                Right Inverse of Ref then Compose to Src
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename LayoutRef, typename LayoutSrc>
+void test_RIRCS(int ps)
+{
+    auto res = right_inverse(LayoutRef{}).compose(LayoutSrc{});
+
+    // clang-format off
+    print("Reference Layout : ");custom_print(LayoutRef{},ps);print("\n");
+    print("Source    Layout : ");custom_print(LayoutSrc{},ps);print("\n");
+    print("Result    Layout : ");custom_print(res,ps);print("\n");
+    // clang-format on
+}
+
+void test_RIRCS_examples(int ps)
+{
+    {
+        print("Source : 128b , Val : 16b \n");
+        using copy_atom = Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>;
+        test_RIRCS<typename copy_atom::ValLayoutRef, typename copy_atom::ValLayoutSrc>(ps);
+        print("\n");
+    }
+
+    {
+        print("Source : 128b , Val : 8b \n");
+        using copy_atom = Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, int8_t>;
+        test_RIRCS<typename copy_atom::ValLayoutRef, typename copy_atom::ValLayoutSrc>(ps);
+        print("\n");
+    }
+}
+
 int main(int argc, char *argv[])
 {
     // print_select
-    int ps{-1};
+    [[maybe_unused]] int ps{-1};
     if (argc >= 2)
         ps = atoi(argv[1]);
 
@@ -225,5 +259,6 @@ int main(int argc, char *argv[])
     // test_compact_col_major_examples();
     // test_inverse_seq_examples();
     // test_right_inverse_examples(ps);
-    test_composition_examples(ps);
+    // test_composition_examples(ps);
+    test_RIRCS_examples(ps);
 }
