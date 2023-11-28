@@ -442,6 +442,8 @@ void test_tiled_product_examples()
                        Layout<Shape<_2, _3>>>();
     test_tiled_product<Layout<Shape<_2, _3>, Stride<_3, _1>>,
                        Layout<Shape<_2, _2>, Stride<_2, _1>>>();
+    test_tiled_product<Layout<_32>,
+                       Layout<Shape<_2, _2, _1>, Stride<_1, _2, _0>>>();
 }
 
 int main(int argc, char *argv[])
