@@ -7,7 +7,9 @@
         "forceinline",
         "gmem",
         "ivec",
-        "rmem"
+        "rmem",
+        "tidfrg",
+        "tidx"
     ],
     "files.associations": {
         "*.html": "jinja-html",

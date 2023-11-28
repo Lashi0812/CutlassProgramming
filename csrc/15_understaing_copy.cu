@@ -2,6 +2,23 @@
 
 using namespace cute;
 
+template <typename Args>
+void custom_print(Args args, int ps = -1)
+{
+    switch (ps)
+    {
+    case 0:
+        print_layout(args);
+        break;
+    case 1:
+        print_latex(args);
+        break;
+    default:
+        print(args);
+        break;
+    }
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //                             Start of Copy traits
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -153,13 +170,75 @@ void test_get_layouts()
 void test_get_layouts_examples()
 {
     test_get_layouts<Layout<Shape<_16, _8>, Stride<_8, _1>>,
-                         Layout<Shape<_1, _8>, Stride<_0, _1>>>();
+                     Layout<Shape<_1, _8>, Stride<_0, _1>>>();
 }
 
-int main()
+template <typename ThrLayout, typename ValLayout, typename SrcLayout>
+void test_tile2frag(int ps)
 {
+    auto tiled_copy = make_tiled_copy(Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, float>{},
+                                      ThrLayout{}, ValLayout{});
+
+    auto thrFrag = tiled_copy.tidfrg_S(SrcLayout{});
+
+    // clang-format off
+    print("Thread Layout : ");custom_print(ThrLayout{},ps);print("\n");
+    print("Value  Layout : ");custom_print(ValLayout{},ps);print("\n");
+    print(tiled_copy);
+    print("Source Layout : ");custom_print(SrcLayout{},ps);print("\n");
+    print("Thread Frag   : ");print(thrFrag    );print("\n");
+    // clang-format on
+}
+
+void test_tile2frag_examples(int ps)
+{
+    test_tile2frag<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                   Layout<Shape<_1, _4>, Stride<_0, _1>>,
+                   Layout<Shape<_16, _64>>>(ps);
+}
+
+template <typename ThrLayout, typename ValLayout, typename SrcLayout, int tidx>
+void test_get_slice(int ps)
+{
+    auto tiled_copy = make_tiled_copy(Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, float>{},
+                                      ThrLayout{}, ValLayout{});
+
+    auto tid2Frag = tiled_copy.tidfrg_S(SrcLayout{});
+
+    auto src_tensor = make_counting_tensor(SrcLayout{});
+    auto thr_slice = tiled_copy.get_slice(tidx);
+    auto part_s = thr_slice.partition_S(src_tensor);
+
+    // clang-format off
+    print("Thread Layout : ");custom_print(ThrLayout{},ps);print("\n");
+    print("Value  Layout : ");custom_print(ValLayout{},ps);print("\n");
+    print(tiled_copy);
+    print("Source Layout : ");custom_print(SrcLayout{},ps);print("\n");
+    print("Thread Frag   : ");print(tid2Frag    );print("\n");
+    print(tid2Frag(tidx,_, (_,_)));
+    print("Partition     : ");print_tensor(part_s    );print("\n");
+    // clang-format on
+}
+
+void test_get_slice_examples(int ps)
+{
+    test_get_slice<Layout<Shape<_16, _8>, Stride<_8, _1>>,
+                   Layout<Shape<_1, _4>, Stride<_0, _1>>,
+                   Layout<Shape<_16, _64>>,
+                   0>(ps);
+}
+
+int main(int argc, char *argv[])
+{
+    // print_select
+    [[maybe_unused]] int ps{-1};
+    if (argc >= 2)
+        ps = atoi(argv[1]);
+
     // test_copy_trait_examples();
     // test_copy_atom_examples();
     // test_make_tiled_copy_examples();
-    test_get_layouts_examples();
+    // test_get_layouts_examples();
+    // test_tile2frag_examples(ps);
+    test_get_slice_examples(ps);
 }
