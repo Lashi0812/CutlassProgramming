@@ -334,6 +334,28 @@ void test_append_examples()
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Repeat
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <int N>
+void test_repeat()
+{
+    auto res = repeat<N>(_);
+
+    // clang-format off
+    print(" Output : ");print(res);print("\n");
+    // clang-format on
+}
+
+void test_repeat_examples()
+{
+    test_repeat<1>();
+    test_repeat<2>();
+    test_repeat<3>();
+    test_repeat<4>();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //                          Raked product
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -391,8 +413,9 @@ int main(int argc, char *argv[])
     // test_right_inverse_examples(ps);
     // test_composition_examples(ps);
     // test_RIRCS_examples(ps);
+    test_repeat_examples();
     // test_rank_examples();
     // test_append_examples();
     // test_raked_product_examples(ps);
-    test_with_shape_examples(ps);
+    // test_with_shape_examples(ps);
 }
