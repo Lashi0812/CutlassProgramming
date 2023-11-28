@@ -397,6 +397,53 @@ void test_with_shape_examples(int ps)
                     Shape<_128, _8>>(ps);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          zipped product
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Layout, typename Tile>
+void test_zipped_product(int ps)
+{
+    auto res = zipped_product(Layout{}, Tile{});
+
+    // clang-format off
+    print("Input : ");print(Layout{});print(" , ");print(Tile{});print("\n");
+    custom_print(res,ps);print("\n");
+    // clang-format on
+}
+
+void test_zipped_product_examples(int ps)
+{
+    test_zipped_product<Layout<Shape<_2, _2>>,
+                        Layout<Shape<_2, _3>>>(ps);
+    test_zipped_product<Layout<Shape<_2, _3>, Stride<_3, _1>>,
+                        Layout<Shape<_2, _2>, Stride<_2, _1>>>(ps);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          tiled product
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Layout, typename Tile>
+void test_tiled_product()
+{
+    auto res = tiled_product(Layout{}, Tile{});
+    auto tensor = make_counting_tensor(res);
+
+    // clang-format off
+    print("Input : ");print(Layout{});print(" , ");print(Tile{});print("\n");
+    print_tensor(tensor);print("\n\n");
+    // clang-format on
+}
+
+void test_tiled_product_examples()
+{
+    test_tiled_product<Layout<Shape<_2, _2>>,
+                       Layout<Shape<_2, _3>>>();
+    test_tiled_product<Layout<Shape<_2, _3>, Stride<_3, _1>>,
+                       Layout<Shape<_2, _2>, Stride<_2, _1>>>();
+}
+
 int main(int argc, char *argv[])
 {
     // print_select
@@ -413,9 +460,11 @@ int main(int argc, char *argv[])
     // test_right_inverse_examples(ps);
     // test_composition_examples(ps);
     // test_RIRCS_examples(ps);
-    test_repeat_examples();
+    // test_repeat_examples();
     // test_rank_examples();
     // test_append_examples();
     // test_raked_product_examples(ps);
     // test_with_shape_examples(ps);
+    // test_zipped_product_examples(ps);
+    test_tiled_product_examples();
 }
