@@ -16,26 +16,63 @@
 		},
 		{
 			"label": "Run Executable",
-            "type": "shell",
-            "command": "./build/${input:exe}",
-            "group": "build",
+			"type": "shell",
+			"command": "./build/${input:exe}",
+			"group": "build",
 			"detail": "Select Executable to Run",
-            "dependsOn": [
-                "CMake: build"
-            ]
+			"dependsOn": [
+				"CMake: build"
+			]
+		},
+		{
+			"label": "Latex : Generate Tex",
+			"type": "shell",
+			"command": "mkdir -p ${workspaceFolder}/layouts/build/${input:exe} && ${workspaceFolder}/build/${input:exe} > ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.tex",
+			"detail": "Select Executable to Run",
+			"group": "build",
+			"dependsOn": [
+				"CMake: build"
+			]
+		},
+		{
+			"label": "Latex : Generate images",
+			"type": "shell",
+			"command": "make -j 4 -f ${workspaceFolder}/layouts/build/${input:latex}/${input:latex}.makefile IMAGE_PATH=${workspaceFolder}/layouts/assests",
+			"group": "build",
+			"detail": "Select Latex folder to Generate",
+			"options": {
+				"cwd": "${workspaceFolder}/layouts/build/${input:latex}"
+			  }
+		},
+		{
+			"label": "Latex : Clean build",
+			"type": "shell",
+			"command": "rm -rf ${workspaceFolder}/layouts/build/*/",
+			"group": "build",
+			"detail": "Select Latex folder to Generate",
 		}
 	],
 	"inputs": [
-        // Refer for command : https://github.com/microsoft/vscode/issues/109789
-        {
-            "type": "command",
-            "id": "exe",
-            "command": "shellCommand.execute",
-            "args": {
-                "command": "ls -F . | grep '*$' | sed 's/*$//'",
-                "cwd": "${workspaceFolder}/build",
-				"description":"Select Executable to Run",
-            }
-        }
-    ]
+		// Refer for command : https://github.com/microsoft/vscode/issues/109789
+		{
+			"type": "command",
+			"id": "exe",
+			"command": "shellCommand.execute",
+			"args": {
+				"command": "ls -F . | grep '*$' | sed 's/*$//'",
+				"cwd": "${workspaceFolder}/build",
+				"description": "Select Executable to Run",
+			}
+		},
+		{
+			"type": "command",
+			"id": "latex",
+			"command": "shellCommand.execute",
+			"args": {
+				"command": "ls -d *",
+				"cwd": "${workspaceFolder}/layouts/build",
+				"description": "Select latex to Generate",
+			}
+		}
+	]
 }

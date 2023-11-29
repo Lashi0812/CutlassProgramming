@@ -91,5 +91,5 @@
         "__tree": "cpp"
     },
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "latex-workshop.latex.outDir":"/workspaces/CutlassProgramming/layouts"
+    "latex-workshop.latex.outDir":"%DIR%"
 }

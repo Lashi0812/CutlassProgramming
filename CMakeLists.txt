@@ -8,7 +8,10 @@ set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
 
 find_package(Torch REQUIRED)
 find_package(CUDAToolkit REQUIRED)
-include_directories("third-party/cutlass/include")
+include_directories(
+    "third-party/cutlass/include"
+    "include"
+)
 
 file(GLOB CUDA_SOURCE_FILES "./csrc/*.cu")
 foreach(CUDA_SOURCE_FILE ${CUDA_SOURCE_FILES})
