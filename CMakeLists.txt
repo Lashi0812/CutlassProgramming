@@ -2,9 +2,13 @@ cmake_minimum_required(VERSION 3.26)
 project(cutlass CUDA CXX)
 
 set(CMAKE_PREFIX_PATH /root/miniconda3/envs/nlp/lib/python3.11/site-packages/torch/share/cmake)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+
+
 find_package(Torch REQUIRED)
 find_package(CUDAToolkit REQUIRED)
-include_directories("./third-party/cutlass/include")
+include_directories("third-party/cutlass/include")
 
 file(GLOB CUDA_SOURCE_FILES "./csrc/*.cu")
 foreach(CUDA_SOURCE_FILE ${CUDA_SOURCE_FILES})
@@ -14,7 +18,7 @@ foreach(CUDA_SOURCE_FILE ${CUDA_SOURCE_FILES})
 
     # Create an executable for each source file
     add_executable(${EXECUTABLE_NAME} ${CUDA_SOURCE_FILE})
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES CXX_STANDARD 17 CUDA_ARCHITECTURES 89)
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES CXX_STANDARD 17 CUDA_ARCHITECTURES 89 CUDA_SEPARABLE_COMPILATION ON)
     if(containsAten GREATER -1)
         message(STATUS "Linking torch libraries to ${EXECUTABLE_NAME}")
         target_link_libraries(${EXECUTABLE_NAME} "${TORCH_LIBRARIES}")

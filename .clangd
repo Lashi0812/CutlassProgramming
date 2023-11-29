@@ -1,0 +1,15 @@
+CompileFlags:
+  Add:
+    - -std=c++17
+    - --cuda-path=/usr/local/cuda
+    - --cuda-gpu-arch=sm_89
+    - -L/usr/local/cuda/lib64
+    - -I/usr/local/cuda/include  
+  Remove:
+    - -forward-unknown-to-host-compiler
+    - --generate-code*
+    - --diag*
+    - --expt*
+    - -gencode
+    - -Xcudafe
+    - -rdc*
