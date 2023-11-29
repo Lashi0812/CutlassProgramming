@@ -1,0 +1,12 @@
+Language: Cpp
+IndentWidth: 4
+ObjCBlockIndentWidth: 2
+ContinuationIndentWidth: 2
+ColumnLimit: 100
+AlignAfterOpenBracket: AlwaysBreak
+BinPackArguments: false
+BinPackParameters: false
+IndentCaseLabels: true
+AllowAllParametersOfDeclarationOnNextLine: true
+AlwaysBreakTemplateDeclarations: 'Yes'
+SortIncludes: false

@@ -27,7 +27,7 @@
 		{
 			"label": "Latex : Generate Tex",
 			"type": "shell",
-			"command": "mkdir -p ${workspaceFolder}/layouts/build/${input:exe} && ${workspaceFolder}/build/${input:exe} > ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.tex",
+			"command": "mkdir -p ${workspaceFolder}/layouts/build/${input:exe} && ${workspaceFolder}/build/${input:exe} 1 > ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.tex",
 			"detail": "Select Executable to Run",
 			"group": "build",
 			"dependsOn": [
@@ -37,7 +37,7 @@
 		{
 			"label": "Latex : Generate images",
 			"type": "shell",
-			"command": "make -j 4 -f ${workspaceFolder}/layouts/build/${input:latex}/${input:latex}.makefile IMAGE_PATH=${workspaceFolder}/layouts/assests",
+			"command": "make -j 26 -f ${workspaceFolder}/layouts/build/${input:latex}/${input:latex}.makefile IMAGE_PATH=${workspaceFolder}/layouts/assests",
 			"group": "build",
 			"detail": "Select Latex folder to Generate",
 			"options": {
