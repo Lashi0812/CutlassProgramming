@@ -29,9 +29,20 @@
 			"type": "shell",
 			"command": "mkdir -p ${workspaceFolder}/layouts/build/${input:exe} && ${workspaceFolder}/build/${input:exe} 1 > ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.tex",
 			"detail": "Select Executable to Run",
-			"group": "build",
 			"dependsOn": [
 				"CMake: build"
+			]
+		},
+		{
+			"label": "Latex : Compile Tex",
+			"type": "shell",
+			"command": "pdflatex ${input:latex}.tex",
+			"detail": "Select Latex folder to Generate",
+			"options": {
+				"cwd": "${workspaceFolder}/layouts/build/${input:latex}"
+			},
+			"dependsOn": [
+				"Latex : Generate Tex"
 			]
 		},
 		{
@@ -42,7 +53,10 @@
 			"detail": "Select Latex folder to Generate",
 			"options": {
 				"cwd": "${workspaceFolder}/layouts/build/${input:latex}"
-			  }
+			},
+			"dependsOn": [
+				"Latex : Compile Tex"
+			]
 		},
 		{
 			"label": "Latex : Clean build",
