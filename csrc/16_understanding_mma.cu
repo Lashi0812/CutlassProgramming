@@ -1,4 +1,3 @@
-#include <cstdlib>
 #include <cute/tensor.hpp>
 #include "cute/underscore.hpp"
 #include "cute/layout.hpp"
@@ -102,9 +101,32 @@ void test_tiled_mma_examples(int ps = -1) {
         print_latex_footer();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////
+//                      Thr MMA
+////////////////////////////////////////////////////////////////////////////////////////////
+
+void test_thr_mma(int tid_idx) {
+    auto tiled_mma = TiledMMA<MMA_Atom<SM80_16x8x16_F32F16F16F32_TN>>{};
+    auto thr_mma = tiled_mma.get_slice(tid_idx);
+
+    auto tensorC = make_counting_tensor(get<0>(tiled_mma.get_layoutC_MN()));
+    print(tensorC);
+    auto part_c = thr_mma.partition_C(tensorC);
+    print_tensor(part_c);
+}
+
+void test_thr_mma_examples()
+{
+  test_thr_mma(0);
+  test_thr_mma(1);
+}
+
+
+
 int main(int argc, char *argv[]) {
     [[maybe_unused]] int ps{-1};
     if (argc >= 2)
         ps = atoi(argv[1]);
-    test_tiled_mma_examples(ps);
+    // test_tiled_mma_examples(ps);
+    test_thr_mma_examples();
 }
