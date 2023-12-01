@@ -9,6 +9,16 @@
 
 namespace cute {
 
+template <typename Args>
+void custom_print(Args args, const char *name, int ps = -1, int hf = 0) {
+    if (ps == 0)
+        print_layout(args);
+    else if (ps == 1)
+        print_latex(args, name, hf);
+    else
+        print(args);
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////
 //                              Header and footer
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -39,9 +49,16 @@ CUTE_HOST_DEVICE void print_latex_footer() { printf("\\end{document}\n"); }
 //                              Layouts
 //////////////////////////////////////////////////////////////////////////////////////////
 
+// hf == 0 only picture
+// hf == 1 header +  picture
+// hf == 2 picture + footer
+// hf == 3 header +  picture + footer
+
+
 // Generic 2D Layout to Latex printer -- B&W 8-value color coding
 template <class Layout>
-CUTE_HOST_DEVICE void print_latex(Layout const &layout, const char *name) // (m,n) -> idx
+CUTE_HOST_DEVICE void
+print_latex(Layout const &layout, const char *name, int hf = 0) // (m,n) -> idx
 {
     CUTE_STATIC_ASSERT_V(rank(layout) == Int<2>{});
 
@@ -66,6 +83,9 @@ CUTE_HOST_DEVICE void print_latex(Layout const &layout, const char *name) // (m,
     printf("%% Layout: ");
     print(layout);
     printf("\n");
+
+    if (hf & 1)
+        print_latex_header();
 
     printf(
       "\\tikzset{png export}\n"
@@ -93,6 +113,9 @@ CUTE_HOST_DEVICE void print_latex(Layout const &layout, const char *name) // (m,
 
     // Footer
     printf("\\end{tikzpicture}\n");
+
+    if ((hf >> 1) & 1)
+        print_latex_footer();
 }
 
 // Generic ThrVal 2D Layout to Latex TIKZ -- 8-value color coded by thread
@@ -100,7 +123,8 @@ template <class Layout, class ThrID>
 CUTE_HOST_DEVICE void print_latex(
   Layout const &layout,
   ThrID const &thr,
-  const char *name) // (m,n) -> (tid,vid)  and  tid -> thr_idx
+  const char *name,
+  int hf = 0) // (m,n) -> (tid,vid)  and  tid -> thr_idx
 {
     CUTE_STATIC_ASSERT_V(rank(layout) == Int<2>{});
 
@@ -129,6 +153,9 @@ CUTE_HOST_DEVICE void print_latex(
     printf("%% thrid:  ");
     print(thr);
     printf("\n\n");
+
+    if (hf & 1)
+        print_latex_header();
 
     printf(
       "\\tikzset{png export}\n"
@@ -164,6 +191,8 @@ CUTE_HOST_DEVICE void print_latex(
 
     // Footer
     printf(latex_footer);
+    if ((hf >> 1) & 1)
+        print_latex_footer();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -185,7 +214,8 @@ CUTE_HOST_DEVICE void print_latex_copy(
   ThrIDS const &TS, // (m,n) -> (tid,vid)  and  tid -> thr_idx
   LayoutD const &D,
   ThrIDD const &TD,
-  const char *name) // (m,n) -> (tid,vid)  and  tid -> thr_idx
+  const char *name,
+  int hf = 0) // (m,n) -> (tid,vid)  and  tid -> thr_idx
 {
     CUTE_STATIC_ASSERT_V(rank(S) == Int<2>{});
     CUTE_STATIC_ASSERT_V(rank(D) == Int<2>{});
@@ -229,6 +259,9 @@ CUTE_HOST_DEVICE void print_latex_copy(
     printf("%% ThrIDD : ");
     print(TD);
     printf("\n\n");
+
+    if (hf & 1)
+        print_latex_header();
 
     printf(
       "\\tikzset{png export}\n"
@@ -288,6 +321,8 @@ CUTE_HOST_DEVICE void print_latex_copy(
 
     // Footer
     printf("\\end{tikzpicture}\n");
+    if (hf & 1)
+        print_latex_header();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -295,7 +330,7 @@ CUTE_HOST_DEVICE void print_latex_copy(
 //////////////////////////////////////////////////////////////////////////////////////////
 
 template <class... Args>
-CUTE_HOST_DEVICE auto print_latex(TiledMMA<Args...> const &mma, const char *name) {
+CUTE_HOST_DEVICE auto print_latex(TiledMMA<Args...> const &mma, const char *name, int hf = 0) {
     auto layout_and_thrid_C = mma.get_layoutC_MN();
     auto layoutC_MN = get<0>(layout_and_thrid_C);
     auto thrID_C = get<1>(layout_and_thrid_C);
@@ -308,18 +343,19 @@ CUTE_HOST_DEVICE auto print_latex(TiledMMA<Args...> const &mma, const char *name
     auto layoutB_NK = get<0>(layout_and_thrid_B);
     auto thrID_B = get<1>(layout_and_thrid_B);
 
-    print_latex_mma(layoutC_MN, thrID_C, layoutA_MK, thrID_A, layoutB_NK, thrID_B, name);
+    print_latex_mma(layoutC_MN, thrID_C, layoutA_MK, thrID_A, layoutB_NK, thrID_B, name, hf);
 }
 
 // EXPERIMENTAL -- Doesn't work with Swizzled Thr TileMMAs...
 template <class... Args>
-CUTE_HOST_DEVICE auto print_latex_2(TiledMMA<Args...> const &mma, const char *name) {
+CUTE_HOST_DEVICE auto print_latex_2(TiledMMA<Args...> const &mma, const char *name, int hf = 0) {
     print_latex_mma(
       typename TiledMMA<Args...>::TiledShape_MNK{},
       mma.get_layoutC_TV(),
       mma.get_layoutA_TV(),
       mma.get_layoutB_TV(),
-      name);
+      name,
+      hf);
 }
 
 // MNK MMA Layout to Latex TIKZ -- 8-value color coded by thread
@@ -331,7 +367,8 @@ CUTE_HOST_DEVICE void print_latex_mma(
   ThrIDA const &TA, // (m,k) -> (tid,vid)  and  tid -> thr_idx
   LayoutB const &B,
   ThrIDB const &TB, // (n,k) -> (tid,vid)  and  tid -> thr_idx
-  const char *name) {
+  const char *name,
+  int hf = 0) {
     CUTE_STATIC_ASSERT_V(rank(C) == Int<2>{});
     CUTE_STATIC_ASSERT_V(rank(A) == Int<2>{});
     CUTE_STATIC_ASSERT_V(rank(B) == Int<2>{});
@@ -380,6 +417,9 @@ CUTE_HOST_DEVICE void print_latex_mma(
     printf("%% ThrIDB : ");
     print(TB);
     printf("\n\n");
+
+    if (hf & 1)
+        print_latex_header();
 
     printf(
       "\\tikzset{png export}\n"
@@ -456,6 +496,8 @@ CUTE_HOST_DEVICE void print_latex_mma(
 
     // Footer
     printf("\\end{tikzpicture}\n");
+    if ((hf >> 1) & 1)
+        print_latex_footer();
 }
 
 // ThrVal MMA Layout to Latex TIKZ -- 8-value color coded by thread
@@ -465,7 +507,8 @@ CUTE_HOST_DEVICE void print_latex_mma(
   LayoutC const &C, // (thr_idx,vid) -> (m,n)
   LayoutA const &A, // (thr_idx,vid) -> (m,k)
   LayoutB const &B, // (thr_idx,vid) -> (n,k)
-  const char *name) {
+  const char *name,
+  int hf = 0) {
     CUTE_STATIC_ASSERT_V(rank(C) == Int<2>{});
     CUTE_STATIC_ASSERT_V(rank(A) == Int<2>{});
     CUTE_STATIC_ASSERT_V(rank(B) == Int<2>{});
@@ -504,6 +547,9 @@ CUTE_HOST_DEVICE void print_latex_mma(
     printf("%% LayoutB  : ");
     print(B);
     printf("\n\n");
+
+    if (hf & 1)
+        print_latex_header();
 
     printf(
       "\\tikzset{png export}\n"
@@ -593,6 +639,9 @@ CUTE_HOST_DEVICE void print_latex_mma(
 
     // Footer
     printf("\\end{tikzpicture}\n");
+
+    if ((hf >> 1) & 1)
+        print_latex_footer();
 }
 
 } // namespace cute

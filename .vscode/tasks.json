@@ -27,7 +27,7 @@
 		{
 			"label": "Latex : Generate Tex",
 			"type": "shell",
-			"command": "mkdir -p ${workspaceFolder}/layouts/build/${input:exe} && ${workspaceFolder}/build/${input:exe} 1 > ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.tex",
+			"command": "rm -rf ${workspaceFolder}/layouts/build/${input:exe} && mkdir -p ${workspaceFolder}/layouts/build/${input:exe} && ${workspaceFolder}/build/${input:exe} 1 > ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.tex",
 			"detail": "Select Executable to Run",
 			"dependsOn": [
 				"CMake: build"
@@ -36,10 +36,10 @@
 		{
 			"label": "Latex : Compile Tex",
 			"type": "shell",
-			"command": "pdflatex ${input:latex}.tex",
+			"command": "pdflatex ${input:exe}.tex",
 			"detail": "Select Latex folder to Generate",
 			"options": {
-				"cwd": "${workspaceFolder}/layouts/build/${input:latex}"
+				"cwd": "${workspaceFolder}/layouts/build/${input:exe}"
 			},
 			"dependsOn": [
 				"Latex : Generate Tex"
@@ -48,11 +48,11 @@
 		{
 			"label": "Latex : Generate images",
 			"type": "shell",
-			"command": "make -j 26 -f ${workspaceFolder}/layouts/build/${input:latex}/${input:latex}.makefile IMAGE_PATH=${workspaceFolder}/layouts/assests",
+			"command": "make -j 26 -f ${workspaceFolder}/layouts/build/${input:exe}/${input:exe}.makefile IMAGE_PATH=${workspaceFolder}/layouts/assests",
 			"group": "build",
 			"detail": "Select Latex folder to Generate",
 			"options": {
-				"cwd": "${workspaceFolder}/layouts/build/${input:latex}"
+				"cwd": "${workspaceFolder}/layouts/build/${input:exe}"
 			},
 			"dependsOn": [
 				"Latex : Compile Tex"
