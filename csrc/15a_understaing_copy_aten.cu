@@ -11,11 +11,14 @@
 #include "cute/algorithm/copy.hpp"
 #include <ATen/ATen.h>
 #include <iostream>
-#include <vector>
-#include "cute/util/debug.hpp"
-#include "latex.hpp"
+
 
 using namespace cute;
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+//                      Generic Copy using LD
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 
 template <typename TiledCopy, typename T>
 __global__ void copy_kernel(T const *in, T *out) {
@@ -54,41 +57,6 @@ __global__ void copy_kernel(T const *in, T *out) {
     copy(tArA, tAgC);
 }
 
-void test_copy_host() {
-
-    // using TiledCopy = decltype(make_tiled_copy(
-    //   Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>{},
-    //   Layout<Shape<_2, _16>>{},
-    //   Layout<Shape<_8, _1>>{}));
-
-    using TiledCopy = decltype(
-    make_tiled_copy(Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<cute::uint128_t>, half_t>{},
-                    Layout<Shape <_16,_8>,
-                           Stride< _8,_1>>{},
-                    Layout<Shape < _1,_8>>{}));
-
-    TiledCopy tiled_copy;
-    std::vector<int> vecG(1024);
-    std::vector<int> vecS(1024);
-    // auto gA = make_counting_tensor(Layout<typename TiledCopy::TiledShape_MN>{});
-    // auto sA = make_counting_tensor(Layout<typename TiledCopy::TiledShape_MN>{});
-    auto gA = make_tensor(vecG.data(), Layout<typename TiledCopy::TiledShape_MN,Stride<_64,_1>>{});
-    auto sA = make_tensor(vecS.data(), Layout<typename TiledCopy::TiledShape_MN,Stride<_64,_1>>{});
-
-    auto thr_copy = tiled_copy.get_slice(0);
-    auto tAgA = thr_copy.partition_S(gA);
-    auto tAsA = thr_copy.partition_D(sA);
-
-    // clang-format off
-    print(gA);print("\n");
-    print(sA);print("\n");
-    print(tAgA);print("\n");
-    print(tAsA);print("\n");
-    print("Common Vector : ");print(max_common_vector(tAgA, tAsA));print("\n");
-    // clang-format on
-
-    copy(tAgA, tAsA);
-}
 
 void test_normal_copy() {
     using tiled_copy = decltype(make_tiled_copy(
@@ -123,5 +91,4 @@ void test_normal_copy() {
 int main() {
     test_normal_copy();
     cudaDeviceReset();
-    // test_copy_host();
 }
