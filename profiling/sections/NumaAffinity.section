@@ -1,0 +1,33 @@
+Identifier: "NumaAffinity"
+DisplayName: "NUMA Affinity"
+Description: "Non-uniform memory access (NUMA) affinities based on compute and memory distances for all GPUs."
+Order: 63
+Sets {
+  Identifier: "full"
+}
+Metrics {
+  Metrics {
+    Label: "Device Types"
+    Name: "numa__dev_display_name_all"
+  }
+  Metrics {
+    Label: "CPU Affinity"
+    Name: "numa__cpu_affinity"
+  }
+  Metrics {
+    Label: "NUMA ID by CPU Affinity"
+    Name: "numa__id_cpu"
+  }
+  Metrics {
+    Label: "NUMA ID by Memory Affinity"
+    Name: "numa__id_memory"
+  }
+}
+Body {
+  DisplayName: "Table with NUMA IDs based on CPU affinity and memory affinity."
+  Items {
+    NumaIdTable {
+      Label: "NUMA ID Table"
+    }
+  }
+}

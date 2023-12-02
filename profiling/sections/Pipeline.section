@@ -1,0 +1,102 @@
+Identifier: "PipelineStats"
+DisplayName: "PipeLine"
+Description: "Pipeline stats for ALU,LSU,FMA"
+
+Body{
+    Items{
+        Table{
+            Label:"ALU"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"# Inst in SM"
+                Name:"sm__inst_executed_pipe_alu.sum"
+            }
+            Metrics{
+                Label:"# cycles in SM",
+                Name:"sm__pipe_alu_cycles_active.sum"
+            } 
+            Metrics{
+                Label:"# Thread inst Predicate On"
+                Name:"sm__thread_inst_executed_pipe_alu_pred_on.sum"
+            }
+            Metrics{
+                Label:"# Average inst per warp"
+                Name:"smsp__average_inst_executed_pipe_alu_per_warp.ratio"
+            }
+            Metrics{
+                Label:"# Inst in SMSP"
+                Name:"smsp__inst_executed_pipe_alu.sum"
+            }
+            Metrics{
+                Label:"# cycles in SMSP",
+                Name:"smsp__pipe_alu_cycles_active.sum"
+            } 
+            Metrics{
+                Label:"# Thread inst Predicate On"
+                Name:"smsp__thread_inst_executed_pipe_alu_pred_on.sum"
+            }
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"LSu"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"# Inst in SM"
+                Name:"sm__inst_executed_pipe_lsu.sum"
+            }
+            Metrics{
+                Label:"# cycles in SM",
+                Name:"sm__pipe_lsu_cycles_active.sum"
+            } 
+            Metrics{
+                Label:"# Thread inst Predicate On"
+                Name:"sm__thread_inst_executed_pipe_lsu_pred_on.sum"
+            }
+            Metrics{
+                Label:"# Average inst per warp"
+                Name:"smsp__average_inst_executed_pipe_lsu_per_warp.ratio"
+            }
+            Metrics{
+                Label:"# Inst in SMSP"
+                Name:"smsp__inst_executed_pipe_lsu.sum"
+            }
+            Metrics{
+                Label:"# cycles in SMSP",
+                Name:"smsp__pipe_lsu_cycles_active.sum"
+            } 
+            Metrics{
+                Label:"# Thread inst Predicate On"
+                Name:"smsp__thread_inst_executed_pipe_lsu_pred_on.sum"
+            }
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"Active Cycles"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Name:"regex:^(?=.*cycles_active).*.sum$"
+            }
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"Elapsed Cycles"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Name:"regex:^(?=.*cycles_elapsed).*.sum$"
+            }
+        }
+    }
+}

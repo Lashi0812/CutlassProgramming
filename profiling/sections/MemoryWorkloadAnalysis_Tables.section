@@ -1,0 +1,92 @@
+Identifier: "MemoryWorkloadAnalysis_Tables"
+DisplayName: "Memory Workload Analysis Tables"
+Extends: "MemoryWorkloadAnalysis"
+Description: "Detailed tables with data for each memory unit."
+Order: 32
+Sets {
+  Identifier: "full"
+}
+Metrics {
+  Metrics {
+    Label: "Memory Instructions Executed (8 Bit)"
+    Name: "smsp__sass_inst_executed_op_memory_8b.sum"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Memory Instructions Executed (16 Bit)"
+    Name: "smsp__sass_inst_executed_op_memory_16b.sum"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Memory Instructions Executed (32 Bit)"
+    Name: "smsp__sass_inst_executed_op_memory_32b.sum"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Memory Instructions Executed (64 Bit)"
+    Name: "smsp__sass_inst_executed_op_memory_64b.sum"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Memory Instructions Executed (128 Bit)"
+    Name: "smsp__sass_inst_executed_op_memory_128b.sum"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+}
+Body {
+  DisplayName: "Memory Tables"
+  Items {
+    MemorySharedTable {
+      Label: "Shared Memory"
+    }
+  }
+  Items {
+    MemoryL1TEXCacheTable {
+      Label: "L1/TEX Cache"
+    }
+  }
+  Items {
+    MemoryL2CacheTable {
+      Label: "L2 Cache"
+    }
+  }
+  Items {
+    MemoryL2CacheEvictPolicyTable {
+      Label: "L2 Cache Eviction Policies"
+    }
+    Filter {
+      Items {
+        MinArch: 80
+        MaxArch: 86
+      }
+      Items {
+        MinArch: 89
+      }
+    }
+  }
+  Items {
+    MemoryDeviceMemoryTable {
+      Label: "Device Memory"
+    }
+  }
+}

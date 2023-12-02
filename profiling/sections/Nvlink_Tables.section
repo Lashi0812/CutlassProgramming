@@ -1,0 +1,24 @@
+Identifier: "Nvlink_Tables"
+DisplayName: "NVLink Tables"
+Extends: "Nvlink"
+Description: "Detailed tables with properties for each NVLink."
+Order: 62
+Sets {
+  Identifier: "full"
+}
+Sets {
+  Identifier: "nvlink"
+}
+Body {
+  DisplayName: "NVLink Tables"
+  Items {
+    NvlinkPropertyTable {
+      Label: "Logical NVLink Properties"
+    }
+  }
+  Items {
+    NvlinkThroughputTable {
+      Label: "Logical NVLink Throughput"
+    }
+  }
+}

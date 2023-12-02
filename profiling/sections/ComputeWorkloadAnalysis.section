@@ -1,0 +1,281 @@
+Identifier: "ComputeWorkloadAnalysis"
+DisplayName: "Compute Workload Analysis"
+Description: "Detailed analysis of the compute resources of the streaming multiprocessors (SM), including the achieved instructions per clock (IPC) and the utilization of each available pipeline. Pipelines with very high utilization might limit the overall performance."
+Order: 20
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+Header {
+  Metrics {
+    Label: "Executed Ipc Elapsed"
+    Name: "sm__inst_executed.avg.per_cycle_elapsed"
+  }
+  Metrics {
+    Label: "SM Busy"
+    Name: "sm__instruction_throughput.avg.pct_of_peak_sustained_active"
+  }
+  Metrics {
+    Label: "Executed Ipc Active"
+    Name: "sm__inst_executed.avg.per_cycle_active"
+  }
+  Metrics {
+    Label: "Issue Slots Busy"
+    Name: "sm__inst_issued.avg.pct_of_peak_sustained_active"
+  }
+  Metrics {
+    Label: "Issued Ipc Active"
+    Name: "sm__inst_issued.avg.per_cycle_active"
+  }
+  Metrics {
+    Name: ""
+  }
+}
+Metrics {
+  Metrics {
+    Label: "Max. Issued Slots Busy"
+    Name: "sm__inst_issued.max.pct_of_peak_sustained_active"
+  }
+}
+
+Body {
+  DisplayName: "Pipe Utilization (% of active cycles)"
+  Items {
+    BarChart {
+      Label: "Pipe Utilization (% of active cycles)"
+      Description: "Pipeline utilization based on the number of cycles the pipeline was active. This takes the rates of different instructions executing on the pipeline into account. For an instruction requiring 4 cycles to complete execution, the counter is increased by 1 for 4 cycles."
+      SortKey: ByValue
+      SortDirection: Descending
+      ValueAxis {
+        Label: "Utilization [%]"
+        Range {
+          Max: 100
+        }
+      }
+      ValueAxisAlignment: ValueAxisAlignments_Both
+      Metrics {
+        Label: "ALU"
+        Name: "sm__pipe_alu_cycles_active.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "FMA"
+        Name: "sm__pipe_fma_cycles_active.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "FP64"
+        Name: "sm__pipe_fp64_cycles_active.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "Tensor (All)"
+        Name: "sm__pipe_tensor_cycles_active.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "Tensor (DP)"
+        Name: "sm__pipe_tensor_op_dmma_cycles_active.avg.pct_of_peak_sustained_active"
+        Filter {
+          Items {
+            MinArch: CC_80
+            MaxArch: CC_80
+          }
+          Items {
+            MinArch: CC_90
+            MaxArch: CC_90
+          }
+        }
+      }
+      Metrics {
+        Label: "Tensor (FP)"
+        Name: "sm__pipe_tensor_op_hmma_cycles_active.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "Tensor (INT)"
+        Name: "sm__pipe_tensor_op_imma_cycles_active.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_72
+        }
+      }
+      Metrics {
+        Label: "Shared (FP64+FP16+Tensor)"
+        Name: "sm__pipe_shared_cycles_active.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_70
+          MaxArch: CC_70
+        }
+        Options {
+          Label: "Shared (FP16+Tensor)"
+          Name: "sm__pipe_shared_cycles_active.avg.pct_of_peak_sustained_active"
+          Filter {
+            MinArch: CC_72
+            MaxArch: CC_75
+          }
+        }
+        Options {
+          Label: "Shared (FP64+Tensor)"
+          Name: "sm__pipe_shared_cycles_active.avg.pct_of_peak_sustained_active"
+          Filter {
+            Items {
+              MinArch: CC_80
+              MaxArch: CC_80
+            }
+            Items {
+              MinArch: CC_90
+              MaxArch: CC_90
+            }
+          }
+        }
+    }
+    Metrics {
+      Label: "TMA"
+      Name: "sm__pipe_tma_cycles_active.avg.pct_of_peak_sustained_active"
+      Filter {
+        MinArch: CC_90
+        MaxArch: CC_90
+      }
+    }
+    }
+  }
+}
+
+Body {
+  DisplayName: "Pipe Utilization (% of peak instructions executed)"
+  Items {
+    BarChart {
+      Label: "Pipe Utilization (% of peak instructions executed)"
+      Description: "Pipeline utilization based on the number of executed instructions. This does not account for any variation in instruction latencies for this pipeline. For an instruction requiring 4 cycles to complete execution, the counter is increased by 1 only."
+      SortKey: ByValue
+      SortDirection: Descending
+      ValueAxis {
+        Label: "Utilization [%]"
+        Range {
+          Max: 100
+        }
+      }
+      ValueAxisAlignment: ValueAxisAlignments_Both
+      Metrics {
+        Label: "ADU"
+        Name: "sm__inst_executed_pipe_adu.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "ALU"
+        Name: "sm__inst_executed_pipe_alu.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "CBU"
+        Name: "sm__inst_executed_pipe_cbu.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "FMA"
+        Name: "sm__inst_executed_pipe_fma.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "FP16"
+        Name: "sm__inst_executed_pipe_fp16.avg.pct_of_peak_sustained_active"
+        Filter {
+          MaxArch: CC_80
+        }
+        Options {
+          Label: "FMA (FP16)"
+          Name: "sm__inst_executed_pipe_fma_type_fp16.avg.pct_of_peak_sustained_active"
+          Filter {
+            MinArch: CC_86
+          }
+        }
+      }
+      Metrics {
+        Label: "FP64 (DMMA)"
+        Name: "sm__inst_executed_pipe_fp64_op_dmma.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_86
+          MaxArch: CC_89
+        }
+      }
+      Metrics {
+        Label: "FP64 (FP64)"
+        Name: "sm__inst_executed_pipe_fp64_op_fp64.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_86
+          MaxArch: CC_89
+        }
+      }
+
+      Metrics {
+        Label: "FP64"
+        Name: "sm__inst_executed_pipe_fp64.avg.pct_of_peak_sustained_active"
+        Filter {
+          Items {
+            MaxArch: CC_75
+          }
+          Items {
+            MinArch: CC_80
+            MaxArch: CC_80
+          }
+          Items {
+            MinArch: CC_90
+          }
+        }
+      }
+      Metrics {
+        Label: "LSU"
+        Name: "sm__inst_executed_pipe_lsu.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "Tensor (DP)"
+        Name: "sm__inst_executed_pipe_tensor_op_dmma.avg.pct_of_peak_sustained_active"
+        Filter {
+          Items {
+            MinArch: CC_80
+            MaxArch: CC_80
+          }
+          Items {
+            MinArch: CC_90
+            MaxArch: CC_90
+          }
+        }
+      }
+      Metrics {
+        Label: "Tensor (Warp Group)"
+        Name: "sm__inst_executed_pipe_tensor_op_gmma.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+      Metrics {
+        Label: "Tensor (FP)"
+        Name: "sm__inst_executed_pipe_tensor_op_hmma.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "Tensor (INT)"
+        Name: "sm__inst_executed_pipe_tensor_op_imma.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_72
+        }
+      }
+      Metrics {
+        Label: "TEX"
+        Name: "sm__inst_executed_pipe_tex.avg.pct_of_peak_sustained_active"
+      }
+      Metrics {
+        Label: "TMA"
+        Name: "sm__inst_executed_pipe_tma.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+      Metrics {
+        Label: "Uniform"
+        Name: "sm__inst_executed_pipe_uniform.avg.pct_of_peak_sustained_active"
+        Filter {
+          MinArch: CC_75
+        }
+      }
+      Metrics {
+        Label: "XU"
+        Name: "sm__inst_executed_pipe_xu.avg.pct_of_peak_sustained_active"
+      }
+    }
+  }
+}

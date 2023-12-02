@@ -1,0 +1,156 @@
+Identifier: "SpeedOfLight"
+DisplayName: "GPU Speed Of Light Throughput"
+Description: "High-level overview of the throughput for compute and memory resources of the GPU. For each unit, the throughput reports the achieved percentage of utilization with respect to the theoretical maximum. Breakdowns show the throughput for each individual sub-metric of Compute and Memory to clearly identify the highest contributor."
+Order: 10
+Sets {
+  Identifier: "basic"
+}
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+Sets {
+  Identifier: "roofline"
+}
+Header {
+  Metrics {
+    Label: "Compute (SM) Throughput"
+    Name: "sm__throughput.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "Duration"
+    Name: "gpu__time_duration.sum"
+  }
+  Metrics {
+    Label: "Memory Throughput"
+    Name: "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "Elapsed Cycles"
+    Name: "gpc__cycles_elapsed.max"
+  }
+  Metrics {
+    Label: "L1/TEX Cache Throughput"
+    Name: "l1tex__throughput.avg.pct_of_peak_sustained_active"
+  }
+  Metrics {
+    Label: "SM Active Cycles"
+    Name: "sm__cycles_active.avg"
+  }
+  Metrics {
+    Label: "L2 Cache Throughput"
+    Name: "lts__throughput.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "SM Frequency"
+    Name: "gpc__cycles_elapsed.avg.per_second"
+  }
+  Metrics {
+    Label: "DRAM Throughput"
+    Name: "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed"
+    Filter {
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed"
+      Filter {
+        MinArch: CC_75
+        MaxArch: CC_86
+      }
+    }
+    Options {
+      Name: "gpu__dram_throughput.avg.pct_of_peak_sustained_elapsed"
+      Filter {
+        MinArch: CC_89
+      }
+    }
+  }
+  Metrics {
+    Label: "DRAM Frequency"
+    Name: "dram__cycles_elapsed.avg.per_second"
+    Filter {
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "dram__cycles_elapsed.avg.per_second"
+      Filter {
+        MinArch: CC_75
+        MaxArch: CC_86
+      }
+    }
+    Options {
+      Name: "dram__cycles_elapsed.avg.per_second"
+      Filter {
+        MinArch: CC_89
+      }
+    }
+  }
+}
+Metrics {
+  Metrics {
+    Label: "Waves Per SM"
+    Name: "launch__waves_per_multiprocessor"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+}
+Body {
+  DisplayName: "GPU Throughput Chart"
+  Items {
+   BarChart {
+      Label: "GPU Throughput"
+      ValueAxis {
+        Label: "Speed Of Light (SOL) [%]"
+        Range {
+          Min: 0
+          Max: 100
+        }
+        TickCount: 11
+      }
+      Metrics {
+        Label: "Compute (SM) [%]"
+        Name: "sm__throughput.avg.pct_of_peak_sustained_elapsed"
+      }
+      Metrics {
+        Label: "Memory [%]"
+        Name: "gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed"
+      }
+    }
+  }
+}
+Body {
+  DisplayName: "GPU Throughput Breakdown"
+  Items {
+    HorizontalContainer {
+      Items {
+        Table {
+          Label: "Compute Throughput Breakdown"
+          Columns: 1
+          SortKey: ByValue
+          SortDirection: Descending
+          Metrics {
+            Label: "{UNIT}: {COMPOUND_NAME}"
+            Name: "breakdown:sm__throughput.avg.pct_of_peak_sustained_elapsed"
+          }
+        }
+      }
+      Items {
+        Table {
+          Label: "Memory Throughput Breakdown"
+          Columns: 1
+          SortKey: ByValue
+          SortDirection: Descending
+          Metrics {
+            Label: "{UNIT}: {COMPOUND_NAME}"
+            Name: "breakdown:gpu__compute_memory_throughput.avg.pct_of_peak_sustained_elapsed"
+          }
+        }
+      }
+    }
+  }
+}

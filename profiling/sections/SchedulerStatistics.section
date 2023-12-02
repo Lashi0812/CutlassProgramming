@@ -1,0 +1,70 @@
+Identifier: "SchedulerStats"
+DisplayName: "Scheduler Statistics"
+Description: "Summary of the activity of the schedulers issuing instructions. Each scheduler maintains a pool of warps that it can issue instructions for. The upper bound of warps in the pool (Theoretical Warps) is limited by the launch configuration. On every cycle each scheduler checks the state of the allocated warps in the pool (Active Warps). Active warps that are not stalled (Eligible Warps) are ready to issue their next instruction. From the set of eligible warps the scheduler selects a single warp from which to issue one or more instructions (Issued Warp). On cycles with no eligible warps, the issue slot is skipped and no instruction is issued. Having many skipped issue slots indicates poor latency hiding."
+Order: 40
+Sets {
+  Identifier: "full"
+}
+Metrics {
+  Metrics {
+    Label: "Theoretical Active Warps Per Scheduler"
+    Name: "smsp__warps_active.avg.peak_sustained"
+  }
+}
+Header {
+  Metrics {
+    Label: "Active Warps Per Scheduler"
+    Name: "smsp__warps_active.avg.per_cycle_active"
+  }
+  Metrics {
+    Label: "No Eligible"
+    Name: "smsp__issue_inst0.avg.pct_of_peak_sustained_active"
+  }
+  Metrics {
+    Label: "Eligible Warps Per Scheduler"
+    Name: "smsp__warps_eligible.avg.per_cycle_active"
+  }
+  Metrics {
+    Label: "One or More Eligible"
+    Name: "smsp__issue_active.avg.pct_of_peak_sustained_active"
+  }
+  Metrics {
+    Label: "Issued Warp Per Scheduler"
+    Name: "smsp__issue_active.avg.per_cycle_active"
+  }
+  Metrics {
+    Name: ""
+  }
+}
+Body {
+  Items {
+    BarChart {
+      Label: "Warps Per Scheduler"
+      ValueAxis {
+        Range {
+          Max: 16
+        }
+      }
+      Metrics {
+        Label: "GPU Maximum Warps Per Scheduler"
+        Name: "smsp__warps_active.avg.peak_sustained"
+      }
+      Metrics {
+        Label: "Theoretical Warps Per Scheduler"
+        Name: "smsp__maximum_warps_avg_per_active_cycle"
+      }
+      Metrics {
+        Label: "Active Warps Per Scheduler"
+        Name: "smsp__warps_active.avg.per_cycle_active"
+      }
+      Metrics {
+        Label: "Eligible Warps Per Scheduler"
+        Name: "smsp__warps_eligible.avg.per_cycle_active"
+      }
+      Metrics {
+        Label: "Issued Warp Per Scheduler"
+        Name: "smsp__issue_active.avg.per_cycle_active"
+      }
+    }
+  }
+}

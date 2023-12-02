@@ -1,0 +1,60 @@
+Identifier: "InstructionStats"
+DisplayName: "Instruction Statistics"
+Description: "Statistics of the executed low-level assembly instructions (SASS). The instruction mix provides insight into the types and frequency of the executed instructions. A narrow mix of instruction types implies a dependency on few instruction pipelines, while others remain unused. Using multiple pipelines allows hiding latencies and enables parallel execution. Note that 'Instructions/Opcode' and 'Executed Instructions' are measured differently and can diverge if cycles are spent in system calls."
+Order: 60
+Sets {
+  Identifier: "full"
+}
+Metrics {
+  Metrics {
+    Label: "Instructions Executed"
+    Name: "inst_executed"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+}
+Header {
+  Metrics {
+    Label: "Executed Instructions"
+    Name: "smsp__inst_executed.sum"
+  }
+  Metrics {
+    Label: "Avg. Executed Instructions Per Scheduler"
+    Name: "smsp__inst_executed.avg"
+  }
+  Metrics {
+    Label: "Issued Instructions"
+    Name: "smsp__inst_issued.sum"
+  }
+  Metrics {
+    Label: "Avg. Issued Instructions Per Scheduler"
+    Name: "smsp__inst_issued.avg"
+  }
+}
+Body {
+  Items {
+    BarChart {
+      Label: "Executed Instruction Mix"
+      CategoryAxis {
+        Label: "Opcodes"
+      }
+      ValueAxis {
+        Label: "Executed Instructions/Opcode"
+      }
+      ValueAxisAlignment: ValueAxisAlignments_Both
+      Metrics {
+        Label: "Executed Instructions By Basic SASS Opcode"
+        Name: "sass__inst_executed_per_opcode"
+        ShowInstances: 1
+      }
+    }
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+}

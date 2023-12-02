@@ -1,0 +1,229 @@
+Identifier: "SpeedOfLight_HierarchicalHalfRooflineChart"
+DisplayName: "GPU Speed Of Light Hierarchical Roofline Chart (Half Precision)"
+Extends: "SpeedOfLight"
+Description: "High-level overview of the utilization for compute and memory resources of the GPU presented as a roofline chart."
+Order: 12
+Sets {
+  Identifier: "roofline"
+}
+
+Filter {
+  CollectionFilter {
+    CollectionScopes: CollectionScope_Launch
+  }
+}
+
+Metrics {
+ Metrics {
+   Label: "Theoretical Predicated-On HFMA Thread Instructions Executed"
+   Name: "sm__sass_thread_inst_executed_op_hfma_pred_on.sum.peak_sustained"
+ }
+ Metrics {
+   Label: "Predicated-On HFMA Thread Instructions Executed Per Cycle"
+   Name: "smsp__sass_thread_inst_executed_op_hfma_pred_on.sum.per_cycle_elapsed"
+ }
+}
+MetricDefinitions {
+  MetricDefinitions {
+    Name: "derived__sm__sass_thread_inst_executed_op_hfma_pred_on_x2"
+    Expression: "sm__sass_thread_inst_executed_op_hfma_pred_on.sum.peak_sustained * 2"
+  }
+  MetricDefinitions {
+    Name: "derived__smsp__sass_thread_inst_executed_op_hfma_pred_on_x2"
+    Expression: "smsp__sass_thread_inst_executed_op_hfma_pred_on.sum.per_cycle_elapsed * 2"
+  }
+}
+Body {
+  DisplayName: "SOL Rooflines"
+  Items {
+    RooflineChart {
+      Label: "Floating Point Operations Roofline (Half Precision)"
+      AxisIntensity {
+        Label: "Arithmetic Intensity [FLOP/byte]"
+      }
+      AxisWork {
+        Label: "Performance [FLOP/s]"
+      }
+      Rooflines {
+        PeakWork {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Theoretical Predicated-On HFMA Operations"
+              Name: "derived__sm__sass_thread_inst_executed_op_hfma_pred_on_x2"
+            }
+            CyclesPerSecondMetric {
+              Label: "SM Frequency"
+              Name: "sm__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        PeakTraffic {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Theoretical DRAM Bytes Accessible"
+              Name: "dram__bytes.sum.peak_sustained"
+            }
+            CyclesPerSecondMetric {
+              Label: "DRAM Frequency"
+              Name: "dram__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        Options {
+          Label: "DRAM Roofline"
+        }
+      }
+      Rooflines {
+        PeakWork {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Theoretical Predicated-On HFMA Operations"
+              Name: "derived__sm__sass_thread_inst_executed_op_hfma_pred_on_x2"
+            }
+            CyclesPerSecondMetric {
+              Label: "SM Frequency"
+              Name: "sm__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        PeakTraffic {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Theoretical L2 Cache Bytes Accessible"
+              Name: "lts__t_bytes.sum.peak_sustained"
+            }
+            CyclesPerSecondMetric {
+              Label: "L2 Cache Frequency"
+              Name: "lts__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        Options {
+          Label: "L2 Roofline"
+        }
+      }
+      Rooflines {
+        PeakWork {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Theoretical Predicated-On HFMA Operations"
+              Name: "derived__sm__sass_thread_inst_executed_op_hfma_pred_on_x2"
+            }
+            CyclesPerSecondMetric {
+              Label: "SM Frequency"
+              Name: "sm__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        PeakTraffic {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Theoretical L1/TEX Cache Bytes Accessible"
+              Name: "l1tex__t_bytes.sum.peak_sustained"
+            }
+            CyclesPerSecondMetric {
+              Label: "L1/TEX Cache Frequency"
+              Name: "l1tex__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        Options {
+          Label: "L1 Roofline"
+        }
+      }
+      AchievedValues {
+        AchievedWork {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HADD Thread Instructions Executed Per Cycle"
+              Name: "smsp__sass_thread_inst_executed_op_hadd_pred_on.sum.per_cycle_elapsed"
+            }
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HMUL Thread Instructions Executed Per Cycle"
+              Name: "smsp__sass_thread_inst_executed_op_hmul_pred_on.sum.per_cycle_elapsed"
+            }
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HFMA Operations Per Cycle"
+              Name: "derived__smsp__sass_thread_inst_executed_op_hfma_pred_on_x2"
+            }
+            CyclesPerSecondMetric {
+              Label: "SM Frequency"
+              Name: "smsp__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        AchievedTraffic {
+          Metric {
+            Label: "DRAM Bandwidth"
+            Name: "dram__bytes.sum.per_second"
+          }
+        }
+        Options {
+          Label: "DRAM Achieved Value"
+        }
+      }
+      AchievedValues {
+        AchievedWork {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HADD Thread Instructions Executed Per Cycle"
+              Name: "smsp__sass_thread_inst_executed_op_hadd_pred_on.sum.per_cycle_elapsed"
+            }
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HMUL Thread Instructions Executed Per Cycle"
+              Name: "smsp__sass_thread_inst_executed_op_hmul_pred_on.sum.per_cycle_elapsed"
+            }
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HFMA Operations Per Cycle"
+              Name: "derived__smsp__sass_thread_inst_executed_op_hfma_pred_on_x2"
+            }
+            CyclesPerSecondMetric {
+              Label: "SM Frequency"
+              Name: "smsp__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        AchievedTraffic {
+          Metric {
+            Label: "L2 Cache Bandwidth"
+            Name: "lts__t_bytes.sum.per_second"
+          }
+        }
+        Options {
+          Label: "L2 Achieved Value"
+        }
+      }
+      AchievedValues {
+        AchievedWork {
+          ValueCyclesPerSecondExpression {
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HADD Thread Instructions Executed Per Cycle"
+              Name: "smsp__sass_thread_inst_executed_op_hadd_pred_on.sum.per_cycle_elapsed"
+            }
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HMUL Thread Instructions Executed Per Cycle"
+              Name: "smsp__sass_thread_inst_executed_op_hmul_pred_on.sum.per_cycle_elapsed"
+            }
+            ValuePerCycleMetrics {
+              Label: "Predicated-On HFMA Operations Per Cycle"
+              Name: "derived__smsp__sass_thread_inst_executed_op_hfma_pred_on_x2"
+            }
+            CyclesPerSecondMetric {
+              Label: "SM Frequency"
+              Name: "smsp__cycles_elapsed.avg.per_second"
+            }
+          }
+        }
+        AchievedTraffic {
+          Metric {
+            Label: "L1/TEX Cache Bandwidth"
+            Name: "l1tex__t_bytes.sum.per_second"
+          }
+        }
+        Options {
+          Label: "L1 Achieved Value"
+        }
+      }
+    }
+  }
+}

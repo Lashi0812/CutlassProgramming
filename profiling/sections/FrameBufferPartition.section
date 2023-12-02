@@ -1,0 +1,38 @@
+Identifier: "FrameBufferPartition"
+DisplayName: "Frame Buffer Partition"
+Description: "The FrameBuffer Partition is a memory controller which sits between the level 2 cache (LTC) and the DRAM."
+
+
+Body{
+    Items{
+        Table{
+            Label:"Frame Buffer Partition"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Read Bytes"
+                Name:"fbpa__dram_read_bytes.sum"
+            }
+            Metrics{
+                Label:"Read Sectors"
+                Name:"fbpa__dram_read_sectors.sum"
+            }
+            Metrics{
+                Label:"Read Throughput"
+                Name:"fbpa__dram_read_bytes.sum.per_second"
+            }
+            Metrics{
+                Label:"Write Bytes"
+                Name:"fbpa__dram_write_bytes.sum"
+            }
+            Metrics{
+                Label:"Write Sectors"
+                Name:"fbpa__dram_write_sectors.sum"
+            }
+            Metrics{
+                Label:"Write Throughput"
+                Name:"fbpa__dram_write_bytes.sum.per_second"
+            }
+        }
+    }
+}

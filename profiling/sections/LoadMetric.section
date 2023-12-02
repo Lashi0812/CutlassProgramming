@@ -1,0 +1,194 @@
+Identifier: "LoadMetrics"
+DisplayName: "Load Metrics"
+Description: "Load Metrics from thread,Wrap,smsp,sm,L1,L2,DRAM"
+
+Header {
+    Metrics{
+        Label:"Requested requests For GLoad"
+        Name:"l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum"
+    }
+    Metrics{
+        Label:"sector/req"
+        Name:"l1tex__average_t_sectors_per_request_pipe_lsu_mem_global_op_ld.ratio"
+    }
+    Metrics{
+        Label:"GLoad Throughput"
+        Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum.per_second"
+    }
+    Metrics{
+        Label:"Load Efficiency"
+        Name:"smsp__sass_average_data_bytes_per_sector_mem_global_op_ld.pct"
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"Thread Level"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"# Thread launched"
+                Name:"smsp__threads_launched.sum"
+            }
+            Metrics{
+                Label:"# of Inst Exec",
+                Name:"smsp__thread_inst_executed.sum"
+            } 
+            Metrics{
+                Label:"# Inst When Predicate On"
+                Name:"smsp__thread_inst_executed_pred_on.sum"
+            }
+            Metrics{
+                Label: "# Inst When Predicate Off"
+                Name:"smsp__thread_inst_executed_pred_off.sum"
+            }
+            Metrics{
+                Label:"Ratio On/Inst"
+                Name:"smsp__thread_inst_executed_pred_on_per_inst_executed.pct"
+            }
+            Metrics{
+                Label:"# of Inst Exec by LSU pipe"
+                Name:"smsp__thread_inst_executed_pipe_lsu_pred_on.sum"
+            }
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"Warp Levels"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"# Warp launched"
+                Name:"smsp__warps_launched.sum"
+            }
+            Metrics{
+                Label:"Thread per Warp"
+                Name:"smsp__average_threads_launched_per_warp.pct"
+            }
+            Metrics{
+                Label:"# Inst Exec"
+                Name:"smsp__inst_executed.sum"
+            }
+            Metrics{
+                Label:"# Inst Exec For LSU"
+                Name:"smsp__inst_executed_pipe_lsu.sum"
+            }
+            Metrics{
+                Label:"# GLoadInst Exec"
+                Name:"smsp__inst_executed_op_generic_ld.sum"
+            }
+            Metrics{
+                Label:"# GLoadInst Exec When thread pred off"
+                Name:"smsp__inst_executed_op_generic_ld_pred_off_all.sum"
+            }
+            Metrics{
+                Label:"# GLoadInst Exec When atleast a thread pred on"
+                Name:"smsp__inst_executed_op_generic_ld_pred_on_any.sum"
+            }
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"L1 Level Tag Stage"
+            Columns:3
+            Order:ColumnMajor
+            Metrics{
+                Label:"Bytes Requested For GLoad"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics{
+                Label:"Bytes Hits"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld_lookup_hit.sum"
+            }
+            Metrics{
+                Label:"Bytes Miss"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Sectors Requested For GLoad"
+                Name:"l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics{
+                Label:"Sectors Hits"
+                Name:"l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_hit.sum"
+            }
+            Metrics{
+                Label:"Sectors Miss"
+                Name:"l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Requested requests For GLoad"
+                Name:"l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics{
+                Label:"sector/req"
+                Name:"l1tex__average_t_sectors_per_request_pipe_lsu_mem_global_op_ld.ratio"
+            }
+            Metrics{
+                Label:"GLoad Throughput"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum.per_second"
+            }
+            # Metrics{
+            #     Label:"Sector Hit Rate"
+            #     Name:"l1tex__t_sector_pipe_lsu_mem_global_op_ld_hit_rate.pct"
+            # }
+            # Metrics{
+            #     Label:"L1 cache access"
+            #     Name:"l1tex__t_set_accesses_pipe_lsu_mem_global_op_ld.sum"
+            # }          
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"L1 Level Miss stage to L2"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Name:"regex:^(?=.*l1tex)(?=.*m_)(?=.*lsu)(?!.*mem).*.sum$"
+            }
+        }
+    }
+}
+Body{
+    Items{
+        Table{
+            Label:"L2 Cache"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Load Requests to L2 that missed in L1 Cache"
+                Name:"lts__t_requests_srcunit_tex_op_read.sum"
+            }
+            Metrics{
+                Label:"Load Sectors to L2 that missed in L1 Cache"
+                Name:"lts__t_sectors_srcunit_tex_op_read.sum"
+            }
+            Metrics{
+                Label:"Load Requests to device that missed in L2 Cache"
+                Name:"lts__t_requests_srcunit_tex_aperture_device_op_read_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Load Sectors to device that missed in L2 Cache"
+                Name:"lts__t_sectors_srcunit_tex_aperture_device_op_read_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Load Efficiency"
+                Name:"smsp__sass_average_data_bytes_per_sector_mem_global_op_ld.pct"
+            }
+            Metrics{
+                Label:"Accessing device for read"
+                Name:"lts__t_requests_aperture_device_op_read.sum"
+            }
+            Metrics{
+                Label:"Accessing device for write"
+                Name:"lts__t_requests_aperture_device_op_write.sum"
+            }
+        }
+    }
+}

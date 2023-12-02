@@ -1,0 +1,86 @@
+Identifier: "LaunchStats"
+DisplayName: "Launch Statistics"
+Description: "Summary of the configuration used to launch the kernel. The launch configuration defines the size of the kernel grid, the division of the grid into blocks, and the GPU resources needed to execute the kernel. Choosing an efficient launch configuration maximizes device utilization."
+Order: 70
+Sets {
+  Identifier: "basic"
+}
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+
+Filter {
+  CollectionFilter {
+    CollectionScopes: CollectionScope_Launch
+  }
+}
+
+Header {
+  Metrics {
+    Label: "Grid Size"
+    Name: "launch__grid_size"
+  }
+  Metrics {
+    Label: "Function Cache Configuration"
+    Name: "launch__func_cache_config"
+  }
+  Metrics {
+    Label: "Cluster Size"
+    Name: "launch__cluster_size"
+    Filter {
+      MinArch: CC_90
+    }
+  }
+  Metrics {
+    Label: "Registers Per Thread"
+    Name: "launch__registers_per_thread"
+  }
+  Metrics {
+    Label: "Cluster Scheduling Policy"
+    Name: "launch__cluster_scheduling_policy"
+    Filter {
+      MinArch: CC_90
+    }
+  }
+  Metrics {
+    Label: "Static Shared Memory Per Block"
+    Name: "launch__shared_mem_per_block_static"
+  }
+  Metrics {
+    Label: "Block Size"
+    Name: "launch__block_size"
+  }
+  Metrics {
+    Label: "Dynamic Shared Memory Per Block"
+    Name: "launch__shared_mem_per_block_dynamic"
+  }
+  Metrics {
+    Label: "Threads"
+    Name: "launch__thread_count"
+  }
+  Metrics {
+    Label: "Driver Shared Memory Per Block"
+    Name: "launch__shared_mem_per_block_driver"
+  }
+  Metrics {
+    Label: "Waves Per SM"
+    Name: "launch__waves_per_multiprocessor"
+  }
+  Metrics {
+    Label: "Shared Memory Configuration Size"
+    Name: "launch__shared_mem_config_size"
+  }
+}
+Metrics {
+  Metrics {
+    Label: "Achieved Occupancy"
+    Name: "sm__warps_active.avg.pct_of_peak_sustained_active"
+  }
+  Metrics {
+    Label: "Theoretical Occupancy"
+    Name: "sm__maximum_warps_per_active_cycle_pct"
+  }
+}

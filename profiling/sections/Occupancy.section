@@ -1,0 +1,224 @@
+Identifier: "Occupancy"
+DisplayName: "Occupancy"
+Description: "Occupancy is the ratio of the number of active warps per multiprocessor to the maximum number of possible active warps. Another way to view occupancy is the percentage of the hardware's ability to process warps that is actively in use. Higher occupancy does not always result in higher performance, however, low occupancy always reduces the ability to hide latencies, resulting in overall performance degradation. Large discrepancies between the theoretical and the achieved occupancy during execution typically indicates highly imbalanced workloads."
+Order: 80
+Sets {
+  Identifier: "basic"
+}
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+
+Filter {
+  CollectionFilter {
+    CollectionScopes: CollectionScope_Launch
+  }
+}
+
+Header {
+  Metrics {
+    Label: "Theoretical Occupancy"
+    Name: "sm__maximum_warps_per_active_cycle_pct"
+  }
+  Metrics {
+    Label: "Block Limit Registers"
+    Name: "launch__occupancy_limit_registers"
+  }
+  Metrics {
+    Label: "Theoretical Active Warps per SM"
+    Name: "sm__maximum_warps_avg_per_active_cycle"
+  }
+  Metrics {
+    Label: "Block Limit Shared Mem"
+    Name: "launch__occupancy_limit_shared_mem"
+  }
+  Metrics {
+    Label: "Achieved Occupancy"
+    Name: "sm__warps_active.avg.pct_of_peak_sustained_active"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+        CollectionScopes: CollectionScope_Range
+      }
+    }
+  }
+  Metrics {
+    Label: "Block Limit Warps"
+    Name: "launch__occupancy_limit_warps"
+  }
+  Metrics {
+    Label: "Achieved Active Warps Per SM"
+    Name: "sm__warps_active.avg.per_cycle_active"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+        CollectionScopes: CollectionScope_Range
+      }
+    }
+  }
+  Metrics {
+    Label: "Block Limit SM"
+    Name: "launch__occupancy_limit_blocks"
+  }
+  Metrics {
+    Label: "Max Cluster Size"
+    Name: "launch__cluster_max_potential_size"
+    Filter {
+      MinArch: CC_90
+    }
+  }
+  Metrics {
+    Label: "Max Active Clusters"
+    Name: "launch__cluster_max_active"
+    Filter {
+      MinArch: CC_90
+    }
+  }
+  Metrics {
+    Label: "Cluster Occupancy"
+    Name: "launch__occupancy_cluster_pct"
+    Filter {
+      MinArch: CC_90
+    }
+  }
+  Metrics {
+    Label: "Overall GPU Occupancy"
+    Name: "launch__occupancy_cluster_gpu_pct"
+    Filter {
+      MinArch: CC_90
+    }
+  }
+}
+Body {
+  Items {
+    LineChart {
+      Label: "Impact of Varying Register Count Per Thread"
+      AxisX {
+        Label: "Registers Per Thread"
+        Range {
+          Min: 0
+        }
+        TickCount: 33
+        Precision: 0
+      }
+      AxisY {
+        Label: "Warp Occupancy"
+        Range {
+          Min: 0
+        }
+        Precision: 0
+      }
+      Metrics {
+        Label: "Warp Occupancy Per Register Count"
+        Name: "launch__occupancy_per_register_count"
+        ShowInstances: 1
+      }
+      HighlightX {
+        Metrics {
+          Label: "Registers Per Thread"
+          Name: "launch__registers_per_thread"
+        }
+      }
+    }
+  }
+  Items {
+    LineChart {
+      Label: "Impact of Varying Block Size"
+      AxisX {
+        Label: "Block Size"
+        Range {
+          Min: 0
+        }
+        TickCount: 33
+        Precision: 0
+      }
+      AxisY {
+        Label: "Warp Occupancy"
+        Range {
+          Min: 0
+        }
+        Precision: 0
+      }
+      Metrics {
+        Label: "Warp Occupancy Per Block Size"
+        Name: "launch__occupancy_per_block_size"
+        ShowInstances: 1
+      }
+      HighlightX {
+        Metrics {
+          Label: "Block Size"
+          Name: "launch__block_size"
+        }
+      }
+    }
+  }
+  Items {
+    LineChart {
+      Label: "Impact of Varying Shared Memory Usage Per Block"
+      AxisX {
+        Label: "Shared Memory Per Block"
+        Range {
+          Min: 0
+        }
+        TickCount: 33
+        Precision: 0
+      }
+      AxisY {
+        Label: "Warp Occupancy"
+        Range {
+          Min: 0
+        }
+        Precision: 0
+      }
+      Metrics {
+        Label: "Warp Occupancy Per Shared Mem Size"
+        Name: "launch__occupancy_per_shared_mem_size"
+        ShowInstances: 1
+      }
+      HighlightX {
+        Metrics {
+          Label: "Shared Memory Per Block"
+          Name: "launch__shared_mem_per_block"
+        }
+      }
+    }
+  }
+  Items {
+    LineChart {
+      Label: "Impact of Varying Cluster Size"
+      AxisX {
+        Label: "Potential Cluster Size"
+        Range {
+          Min: 1
+          Max: 16
+        }
+        TickCount: 16
+        Precision: 0
+      }
+      AxisY {
+        Label: "Active Clusters"
+        Range {
+          Min: 0
+        }
+        Precision: 0
+      }
+      Metrics {
+        Label: "Active Clusters"
+        Name: "launch__occupancy_per_cluster_size"
+        ShowInstances: 1
+      }
+      HighlightX {
+        Metrics {
+          Label: "Cluster Size"
+          Name: "launch__cluster_size"
+        }
+      }
+    }
+    Filter {
+      MinArch: CC_90
+    }
+  }
+}

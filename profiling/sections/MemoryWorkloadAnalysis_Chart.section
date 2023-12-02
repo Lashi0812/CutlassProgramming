@@ -1,0 +1,75 @@
+Identifier: "MemoryWorkloadAnalysis_Chart"
+DisplayName: "Memory Workload Analysis Chart"
+Extends: "MemoryWorkloadAnalysis"
+Description: "Detailed chart of the memory units."
+Order: 31
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+Metrics {
+  Metrics {
+    Label: "L2 Cache Sector Throughput For TEX"
+    Name: "lts__t_sectors_srcunit_tex.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "Missed L2 Cache Sectors For TEX"
+    Name: "lts__t_sectors_srcunit_tex_lookup_miss.sum"
+  }
+  Metrics {
+    Label: "Missed L2 Cache Sectors For TEX Accessing Peer Memory"
+    Name: "lts__t_sectors_srcunit_tex_aperture_peer_lookup_miss.sum"
+    Filter {
+      Items {
+        MaxArch: CC_70
+      }
+      Items {
+        MinArch: CC_75
+        MaxArch: CC_86
+      }
+      Items {
+        MinArch: CC_89
+      }
+    }
+  }
+  Metrics {
+    Label: "Missed L2 Cache Sectors For TEX Accessing System Memory"
+    Name: "lts__t_sectors_srcunit_tex_aperture_sysmem_lookup_miss.sum"
+    Filter {
+      Items {
+        MaxArch: CC_70
+      }
+      Items {
+        MinArch: CC_75
+        MaxArch: CC_86
+      }
+      Items {
+        MinArch: CC_89
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Compression Success Rate"
+    Name: "lts__average_gcomp_input_sector_success_rate.pct"
+    Filter {
+      MinArch: CC_80
+      MaxArch: CC_89
+    }
+    Options {
+      Name: "lrc__average_ilc_input_sector_success_rate.pct"
+      Filter {
+        MinArch: CC_90
+      }
+    }
+  }
+}
+Body {
+  DisplayName: "Memory Chart"
+  Items {
+    MemoryChart {
+      Label: "Memory Chart"
+    }
+  }
+}

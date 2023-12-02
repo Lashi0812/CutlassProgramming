@@ -1,0 +1,652 @@
+Identifier: "SourceCounters"
+DisplayName: "Source Counters"
+Description: "Source metrics, including branch efficiency and sampled warp stall reasons. Warp Stall Sampling metrics are periodically sampled over the kernel runtime. They indicate when warps were stalled and couldn't be scheduled. See the documentation for a description of all stall reasons. Only focus on stalls if the schedulers fail to issue every cycle."
+Order: 100
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+
+MetricDefinitions {
+  MetricDefinitions {
+    Name: "derived__avg_thread_executed"
+    Expression: "thread_inst_executed / inst_executed"
+  }
+  MetricDefinitions {
+    Name: "derived__avg_thread_executed_true"
+    Expression: "thread_inst_executed_true / inst_executed"
+  }
+  MetricDefinitions {
+    Name: "derived__memory_l2_theoretical_sectors_global_excessive"
+    Expression: "memory_l2_theoretical_sectors_global - memory_l2_theoretical_sectors_global_ideal"
+  }
+  MetricDefinitions {
+    Name: "derived__memory_l1_wavefronts_shared_excessive"
+    Expression: "memory_l1_wavefronts_shared - memory_l1_wavefronts_shared_ideal"
+  }
+  MetricDefinitions {
+    Name: "derived__memory_l1_conflicts_shared_nway"
+    Expression: "memory_l1_wavefronts_shared / inst_executed"
+  }
+  MetricDefinitions {
+    Name: "derived__smsp__inst_executed_op_branch_pct"
+    Expression: "smsp__inst_executed_op_branch.sum / smsp__inst_executed.sum"
+  }
+}
+
+Group {
+  Name: "group_inst_executed"
+  Label: "Instructions Executed"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: false
+    }
+  }
+}
+
+Group {
+  Name: "group_memory_access"
+  Label: "Memory Access"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: true
+    }
+  }
+}
+
+Group {
+  Name: "group_l1"
+  Label: "L1 Cache"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: false
+    }
+  }
+}
+
+Group {
+  Name: "group_l2"
+  Label: "L2 Cache"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: false
+    }
+  }
+}
+
+Group {
+  Name: "group_warp_stall_aggregated"
+  Label: "Warp Stalls Aggregated"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: true
+    }
+  }
+}
+
+Group {
+  Name: "group_warp_stall"
+  Label: "Warp Stall"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: false
+    }
+  }
+}
+
+Group {
+  Name: "group_warp_stall_not_issued"
+  Label: "Warp Stalls (Not Issued)"
+  DisplayProperties {
+    SourceView {
+      DefaultVisible: false
+    }
+  }
+}
+
+Header{
+  Metrics {
+    Label: "Branch Instructions"
+    Name: "smsp__inst_executed_op_branch.sum"
+  }
+  Metrics {
+    Label: "Branch Efficiency"
+    Name: "smsp__sass_average_branch_targets_threads_uniform.pct"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Branch Instructions Ratio"
+    Name: "derived__smsp__inst_executed_op_branch_pct"
+  }
+  Metrics {
+    Label: "Avg. Divergent Branches"
+    Name: "smsp__sass_branch_targets_threads_divergent.avg"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+}
+Body {
+  DisplayName: "Warp Stall Sampling (All Cycles)"
+  Items {
+    SourceMetricTable {
+      Label: "Warp Stall Sampling (All Cycles)"
+      Metrics {
+        Name: "group:smsp__pcsamp_warp_stall_reasons"
+      }
+    }
+  }
+}
+Body {
+  DisplayName: "Most Instructions Executed"
+  Items {
+    SourceMetricTable {
+      Label: "Most Instructions Executed"
+      Metrics {
+        Label: "Instructions Executed"
+        Name: "inst_executed"
+      }
+    }
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+}
+Metrics {
+  Metrics {
+    Label: "Warp Stall Sampling (All Cycles)"
+    Name: "group:smsp__pcsamp_warp_stall_reasons"
+    Groups: "group_warp_stall_aggregated"
+  }
+  Metrics {
+    Label: "Warp Stall Sampling (Not-issued Cycles)"
+    Name: "group:smsp__pcsamp_warp_stall_reasons_not_issued"
+    Groups: "group_warp_stall_aggregated"
+    DisplayProperties {
+      SourceView {
+        DefaultVisible: false
+      }
+    }
+  }
+  Metrics {
+    Label: "# Samples"
+    Name: "smsp__pcsamp_sample_count"
+    Groups: "group_warp_stall_aggregated"
+    DisplayProperties {
+      SourceView {
+        DefaultVisible: false
+      }
+    }
+  }
+
+  Metrics {
+    Label: "Instructions Executed"
+    Name: "inst_executed"
+    Groups: "group_inst_executed"
+    DisplayProperties {
+      SourceView {
+        DefaultVisible: true
+      }
+    }
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Thread Instructions Executed"
+    Name: "thread_inst_executed"
+    Groups: "group_inst_executed"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Predicated-On Thread Instructions Executed"
+    Name: "thread_inst_executed_true"
+    Groups: "group_inst_executed"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Avg. Threads Executed"
+    Name: "derived__avg_thread_executed"
+    Groups: "group_inst_executed"
+    DisplayProperties {
+      SourceCorrelation {
+        DivideByCorrelatedLineCount: true
+      }
+    }
+  }
+  Metrics {
+    Label: "Avg. Predicated-On Threads Executed"
+    Name: "derived__avg_thread_executed_true"
+    Groups: "group_inst_executed"
+    DisplayProperties {
+      SourceCorrelation {
+        DivideByCorrelatedLineCount: true
+      }
+    }
+  }
+  Metrics {
+    Label: "Divergent Branches"
+    Name: "smsp__branch_targets_threads_divergent"
+    Groups: "group_inst_executed"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "Address Space"
+    Name: "memory_type"
+    Groups: "group_memory_access"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Access Operation"
+    Name: "memory_access_type"
+    Groups: "group_memory_access"
+     Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "Access Size"
+    Name: "memory_access_size_type"
+    Groups: "group_memory_access"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "L1 Tag Requests Global"
+    Name: "memory_l1_tag_requests_global"
+    Groups: "group_l1"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "L1 Conflicts Shared N-Way"
+    Name: "derived__memory_l1_conflicts_shared_nway"
+    Groups: "group_l1"
+    DisplayProperties {
+      SourceView {
+        DefaultVisible: false
+      }
+    }
+  }
+  Metrics {
+    Label: "L1 Wavefronts Shared Excessive"
+    Name: "derived__memory_l1_wavefronts_shared_excessive"
+    Groups: "group_l1"
+    DisplayProperties {
+      SourceView {
+        DefaultVisible: true
+      }
+    }
+  }
+  Metrics {
+    Label: "L1 Wavefronts Shared"
+    Name: "memory_l1_wavefronts_shared"
+    Groups: "group_l1"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L1 Wavefronts Shared Ideal"
+    Name: "memory_l1_wavefronts_shared_ideal"
+    Groups: "group_l1"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "L2 Theoretical Sectors Global Excessive"
+    Name: "derived__memory_l2_theoretical_sectors_global_excessive"
+    Groups: "group_l2"
+    DisplayProperties {
+      SourceView {
+        DefaultVisible: true
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Theoretical Sectors Global"
+    Name: "memory_l2_theoretical_sectors_global"
+    Groups: "group_l2"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Theoretical Sectors Global Ideal"
+    Name: "memory_l2_theoretical_sectors_global_ideal"
+    Groups: "group_l2"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "L2 Theoretical Sectors Local"
+    Name: "memory_l2_theoretical_sectors_local"
+    Groups: "group_l2"
+    Filter {
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "L2 Explicit Evict Policies"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_evict_type"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Explicit Hit Policy Evict First"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_hitprop_evict_first"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Explicit Hit Policy Evict Last"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_hitprop_evict_last"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Explicit Hit Policy Evict Normal"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_hitprop_evict_normal"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Explicit Hit Policy Evict Normal Demote"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_hitprop_evict_normal_demote"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "L2 Explicit Miss Policy Evict First"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_missprop_evict_first"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+  Metrics {
+    Label: "L2 Explicit Miss Policy Evict Normal"
+    Name: "smsp__sass_inst_executed_memdesc_explicit_missprop_evict_normal"
+    Groups: "group_l2"
+    Filter {
+      MinArch: CC_80
+      CollectionFilter {
+        CollectionScopes: CollectionScope_Launch
+      }
+    }
+  }
+
+  Metrics {
+    Label: "stall_barrier"
+    Name: "smsp__pcsamp_warps_issue_stalled_barrier"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_branch_resolving"
+    Name: "smsp__pcsamp_warps_issue_stalled_branch_resolving"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_dispatch"
+    Name: "smsp__pcsamp_warps_issue_stalled_dispatch_stall"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_drain"
+    Name: "smsp__pcsamp_warps_issue_stalled_drain"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_imc"
+    Name: "smsp__pcsamp_warps_issue_stalled_imc_miss"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_lg"
+    Name: "smsp__pcsamp_warps_issue_stalled_lg_throttle"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_long_sb"
+    Name: "smsp__pcsamp_warps_issue_stalled_long_scoreboard"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_math"
+    Name: "smsp__pcsamp_warps_issue_stalled_math_pipe_throttle"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_membar"
+    Name: "smsp__pcsamp_warps_issue_stalled_membar"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_mio"
+    Name: "smsp__pcsamp_warps_issue_stalled_mio_throttle"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_misc"
+    Name: "smsp__pcsamp_warps_issue_stalled_misc"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_no_inst"
+    Name: "smsp__pcsamp_warps_issue_stalled_no_instructions"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_not_selected"
+    Name: "smsp__pcsamp_warps_issue_stalled_not_selected"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_selected"
+    Name: "smsp__pcsamp_warps_issue_stalled_selected"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_short_sb"
+    Name: "smsp__pcsamp_warps_issue_stalled_short_scoreboard"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_sleep"
+    Name: "smsp__pcsamp_warps_issue_stalled_sleeping"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_tex"
+    Name: "smsp__pcsamp_warps_issue_stalled_tex_throttle"
+    Groups: "group_warp_stall"
+  }
+  Metrics {
+    Label: "stall_wait"
+    Name: "smsp__pcsamp_warps_issue_stalled_wait"
+    Groups: "group_warp_stall"
+  }
+
+  Metrics {
+    Label: "stall_barrier (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_barrier_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_branch_resolving (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_branch_resolving_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_dispatch (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_dispatch_stall_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_drain (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_drain_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_imc (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_imc_miss_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_lg (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_lg_throttle_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_long_sb (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_long_scoreboard_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_math (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_math_pipe_throttle_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_membar (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_membar_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_mio (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_mio_throttle_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_misc (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_misc_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_no_inst (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_no_instructions_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_not_selected (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_not_selected_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_selected (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_selected_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_short_sb (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_short_scoreboard_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_sleeping (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_sleeping_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_tex (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_tex_throttle_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+  Metrics {
+    Label: "stall_wait (Not Issued)"
+    Name: "smsp__pcsamp_warps_issue_stalled_wait_not_issued"
+    Groups: "group_warp_stall_not_issued"
+  }
+
+  Metrics {
+    Label: "Executed Instructions"
+    Name: "smsp__inst_executed.sum"
+  }
+  Metrics {
+    Label: "Elapsed Cycles"
+    Name: "gpc__cycles_elapsed.max"
+  }
+}

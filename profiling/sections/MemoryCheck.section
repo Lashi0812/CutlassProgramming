@@ -1,0 +1,193 @@
+Identifier: "MemoryCheck"
+DisplayName: "Memory Check"
+Extends: "MemoryWorkloadAnalysis"
+Description: "To Understand the Memory Access Pattern"
+
+MetricDefinitions {
+  MetricDefinitions {
+    Name: "lts__t_bytes_srcunit_tex_op_read"
+    Expression: "32 * lts__t_sectors_srcunit_tex_op_read.sum"
+  }
+  MetricDefinitions {
+    Name: "lts__t_sectors_srcunit_tex_op_read_hit_rate"
+    Expression: "100 * lts__t_sectors_srcunit_tex_op_read_lookup_hit.sum / (lts__t_sectors_srcunit_tex_op_read_lookup_hit.sum + lts__t_sectors_srcunit_tex_op_read_lookup_miss.sum)"
+  }
+}
+
+Body {
+    Items {
+        MemoryDeviceMemoryTable{
+            Label:"Actual Memory Accessed From DRAM"
+            ShowLoads:true
+            ShowStores:false
+            ShowTotals:false
+        }
+    }
+    Items{   
+        Table{
+            Label:"Streaming Processor"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Total Number of Threads Launched"
+                Name:"smsp__threads_launched.sum"
+            }
+            Metrics{
+                Label:"Total Number of Warps Launched"
+                Name:"smsp__warps_launched.sum"
+            }
+            Metrics{
+                Label:"Thread per Warp"
+                Name:"sm__average_threads_launched_per_warp.sum"
+            }
+            Metrics{
+                Label:"Global Load Inst Executed by Warp"
+                Name:"smsp__sass_inst_executed_op_global_ld.sum"
+            }
+            Metrics{
+                Label:"Inst from SM to MIO Controller"
+                Name:"sm__mioc_inst_issued.sum"
+            }
+            
+            Metrics{
+                Label:"Inst from MIO controller to MIO"
+                Name:"sm__mio_inst_issued.sum"
+            }
+            
+            Metrics{
+                Label:"Inst from MIO to LSU"
+                Name:"sm__mio_pq_read_cycles_active_pipe_lsu.sum"
+            }
+            Metrics{
+                Label:"WaveFront"
+                Name:"l1tex__data_pipe_lsu_wavefronts_mem_lg_cmd_read.sum"
+            }
+        }
+    }
+    Items{
+        Table{
+            Label:"L1 Cache"
+            Columns:3
+            Order:ColumnMajor
+            Metrics{
+                Label:"SM -> L1 requested Bytes"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics{
+                Label:"SM -> L1 requested Requests"
+                Name:"l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics{
+                Label:"SM -> L1 requested Sectors"
+                Name:"l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics{
+                Label:"Bytes hits"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld_lookup_hit.sum"
+            }
+            Metrics{
+                Label:"Requests hits"
+                Name:"l1tex__t_requests_pipe_lsu_mem_global_op_ld_lookup_hit.sum"
+            }
+            Metrics{
+                Label:"Sectors hits"
+                Name:"l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_hit.sum"
+            }
+            Metrics{
+                Label:"Bytes Missed"
+                Name:"l1tex__t_bytes_pipe_lsu_mem_global_op_ld_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Requests Missed"
+                Name:"l1tex__t_requests_pipe_lsu_mem_global_op_ld_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Sectors Missed"
+                Name:"l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_miss.sum"
+            }
+        }
+    }
+    Items{
+        Table{
+            Label:"L2 Cache"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Load Requests to L2 that missed in L1 Cache"
+                Name:"lts__t_requests_srcunit_tex_op_read.sum"
+            }
+            Metrics{
+                Label:"Load Sectors to L2 that missed in L1 Cache"
+                Name:"lts__t_sectors_srcunit_tex_op_read.sum"
+            }
+            Metrics{
+                Label:"Load Requests to device that missed in L2 Cache"
+                Name:"lts__t_requests_srcunit_tex_aperture_device_op_read_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Load Sectors to device that missed in L2 Cache"
+                Name:"lts__t_sectors_srcunit_tex_aperture_device_op_read_lookup_miss.sum"
+            }
+            Metrics{
+                Label:"Load Efficiency"
+                Name:"smsp__sass_average_data_bytes_per_sector_mem_global_op_ld.pct"
+            }
+        }
+    }
+    Items{        
+        Table { 
+            Label:"Example Table"
+            Columns: 2
+            Order: ColumnMajor
+            Metrics {
+                Label: "L1 Cache Bytes"
+                Name : "l1tex__t_bytes_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics {
+                Label: "L1 Cache Request"
+                Name : "l1tex__t_requests_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics {
+                Label: "L1 Cache Sector"
+                Name : "l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum"
+            }
+            Metrics {
+                Label: "L1 Cache sector Hit"
+                Name : "l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_hit.sum"
+            }
+            Metrics {
+                Label: "L1 Cache sector Miss"
+                Name : "l1tex__t_sectors_pipe_lsu_mem_global_op_ld_lookup_miss.sum"
+            }
+            Metrics {
+                Label: "L1 Cache sector Hit Rate"
+                Name : "l1tex__t_sector_pipe_lsu_mem_global_op_ld_hit_rate"
+            }
+
+            Metrics {
+                Label: "L2 Cache Bytes"
+                Name: "lts__t_bytes_srcunit_tex_op_read"
+            }
+            Metrics {
+                Label: "L2 Cache Request"
+                Name : "lts__t_requests_srcunit_tex_op_read.sum"
+            }
+            Metrics{
+                Label: "L2 Cache Sector"
+                Name : "lts__t_sectors_srcunit_tex_op_read.sum"
+            }
+            Metrics {
+                Label: "L2 Cache sector Hit"
+                Name : "lts__t_sectors_srcunit_tex_op_read_lookup_hit.sum"
+            }
+            Metrics{
+                Label: "L2 Cache sector Miss"
+                Name : "lts__t_sectors_srcunit_tex_op_read_lookup_miss.sum"
+            }
+            Metrics {
+                Label: "L2 Cache sector Hit Rate"
+                Name : "lts__t_sectors_srcunit_tex_op_read_hit_rate"
+            }
+        }
+    }
+}

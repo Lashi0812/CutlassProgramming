@@ -64,7 +64,28 @@
 			"command": "rm -rf ${workspaceFolder}/layouts/build/*/",
 			"group": "build",
 			"detail": "Select Latex folder to Generate",
-		}
+		},
+		{
+            "label": "Metric Profile Section for GEMM Compute Load",
+            "command": "ncu",
+            "args": [
+                "-f",
+                "-o",
+                "./profiling/profiles/${input:exe}",
+                "--config-file",
+                "on",
+                "--replay-mode",
+                "kernel",
+                "--config-file-path",
+                "./profiling/configs/copy.ncu-cfg",
+                "./build/${input:exe}"
+            ],
+            "group": "build",
+            "dependsOn": [
+                "CMake: build"
+            ],
+            "detail": "Select Executable to Profile",
+        }
 	],
 	"inputs": [
 		// Refer for command : https://github.com/microsoft/vscode/issues/109789

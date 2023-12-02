@@ -1,0 +1,37 @@
+Identifier: "DeviceMemoryTable"
+DisplayName: "Device Memory Table"
+Description: "Actual data read write in dram"
+
+Body{
+    Items{
+        Table{
+            Label:"Device Memory Table"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Read Bytes"
+                Name:"dram__bytes_read.sum"
+            }
+            Metrics{
+                Label:"Read Sectors"
+                Name:"dram__sectors_read.sum"
+            }
+            Metrics{
+                Label:"Read Throughput"
+                Name:"dram__bytes_read.sum.per_second"
+            }
+            Metrics{
+                Label:"Write Bytes"
+                Name:"dram__bytes_write.sum"
+            }
+            Metrics{
+                Label:"Write Sectors"
+                Name:"dram__sectors_write.sum"
+            }
+            Metrics{
+                Label:"Write Throughput"
+                Name:"dram__bytes_write.sum.per_second"
+            }
+        }
+    }
+}

@@ -1,0 +1,229 @@
+Identifier: "Nvlink"
+DisplayName: "NVLink"
+Description: "High-level summary of NVLink utilization. It shows the total received and transmitted (sent) memory, as well as the overall link peak utilization."
+Order: 60
+Sets {
+  Identifier: "nvlink"
+}
+Metrics {
+  Metrics {
+    Label: "Transmitted Bandwidth"
+    Name: "nvltx__bytes.sum.per_second"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvltx__bytes.sum.per_second"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+ Metrics {
+    Label: "Received Bandwidth"
+    Name: "nvlrx__bytes.sum.per_second"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvlrx__bytes.sum.per_second"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+}
+Header {
+  Metrics {
+    Label: "Physical Links"
+    Name: "nvlink__count_physical"
+  }
+  Metrics {
+    Label: "Logical Links"
+    Name: "nvlink__count_logical"
+  }
+  Metrics {
+    Label: "Received Bytes"
+    Name: "nvlrx__bytes.sum"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvlrx__bytes.sum"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Received Peak Utilization"
+    Name: "nvlrx__bytes.sum.pct_of_peak_sustained_elapsed"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvlrx__bytes.sum.pct_of_peak_sustained_elapsed"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Transmitted Bytes"
+    Name: "nvltx__bytes.sum"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvltx__bytes.sum"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Transmitted Peak Utilization"
+    Name: "nvltx__bytes.sum.pct_of_peak_sustained_elapsed"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvltx__bytes.sum.pct_of_peak_sustained_elapsed"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Received Overhead Bytes"
+    Name: "nvlrx__bytes_data_protocol.sum"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvlrx__bytes_data_protocol.sum"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Transmitted Overhead Bytes"
+    Name: "nvltx__bytes_data_protocol.sum"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvltx__bytes_data_protocol.sum"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Received User Bytes"
+    Name: "nvlrx__bytes_data_user.sum"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvlrx__bytes_data_user.sum"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+  Metrics {
+    Label: "Transmitted User Bytes"
+    Name: "nvltx__bytes_data_user.sum"
+    Filter {
+      MinArch: CC_70
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "nvltx__bytes_data_user.sum"
+      Filter {
+        Items {
+          MinArch: CC_75
+          MaxArch: CC_86
+        }
+        Items {
+          MinArch: CC_90
+          MaxArch: CC_90
+        }
+      }
+    }
+  }
+}

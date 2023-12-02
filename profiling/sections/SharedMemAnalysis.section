@@ -1,0 +1,147 @@
+Identifier: "SharedMemAnalysis"
+DisplayName: "Shared Memory Analysis"
+Description: "Load/Store/Op Inst , bank Conflicts "
+
+Header{
+    Metrics{
+        Label:"# of warp inst exec:StoreToShared(STS)"
+        Name:"smsp__inst_executed_op_shared_st.sum"
+    }
+    Metrics{
+        Label:"# of warp inst exec:LoadDataShared(LDS)"
+        Name:"smsp__inst_executed_op_shared_ld.sum"
+    }
+    Metrics{
+        Label:"Data Bank Conflict from STS"
+        Name:"smsp__sass_l1tex_data_bank_conflicts_pipe_lsu_mem_shared_op_st.sum"
+    }
+    Metrics{
+        Label:"Data Bank Conflict from LDS"
+        Name:"l1tex__data_bank_conflicts_pipe_lsu_mem_shared_op_ld.sum"
+    }
+
+}
+Body{
+    Items{
+        Table{
+            Label: "Launch Stats"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Shared Mem Config Size"
+                Name:"launch__shared_mem_config_size"
+            }
+            Metrics{
+                Label:"Shared Mem Allocated per block"
+                Name:"launch__shared_mem_per_block_allocated"
+            }
+            Metrics{
+                Label:"Static Shared Mem allocated"
+                Name:"launch__shared_mem_per_block_static"
+            }
+            Metrics{
+                Label:"Dynamic Shared Mem allocated"
+                Name:"launch__shared_mem_per_block_dynamic"
+            }
+        }
+    }
+}
+
+Body{
+    Items{
+        Table{
+            Label: "Warp Level"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"# of warp inst exec:StoreToShared(STS)"
+                Name:"smsp__inst_executed_op_shared_st.sum"
+            }
+            Metrics{
+                Label:"# of warp inst exec:LoadDataShared(LDS)"
+                Name:"smsp__inst_executed_op_shared_ld.sum"
+            }
+            Metrics{
+                Label:"# Wavefront for STS"
+                Name:"smsp__sass_l1tex_data_pipe_lsu_wavefronts_mem_shared_op_st.sum"
+            }
+            Metrics{
+                Label:"# Wavefront for LDS"
+                Name:"smsp__sass_l1tex_data_pipe_lsu_wavefronts_mem_shared_op_ld.sum"
+            }            
+        }
+    }
+}
+
+
+Body{
+    Items{
+        Table{
+            Label: "Load/Store"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"Bytes of Shared mem for Store"
+                Name:"smsp__sass_data_bytes_mem_shared_op_st.sum"
+            }
+            Metrics{
+                Label:"Bytes of Shared mem for Load"
+                Name:"smsp__sass_data_bytes_mem_shared_op_ld.sum"
+            }
+            Metrics{
+                Label:"Data Bank Conflict from STS"
+                Name:"smsp__sass_l1tex_data_bank_conflicts_pipe_lsu_mem_shared_op_st.sum"
+            }
+            Metrics{
+                Label:"Data Bank Conflict from LDS"
+                Name:"l1tex__data_bank_conflicts_pipe_lsu_mem_shared_op_ld.sum"
+            }
+        }
+    }
+}
+
+Body{
+    Items{
+        Table{
+            Label:"Data Banks"
+            Columns:2
+            Order:ColumnMajor
+            Metrics{
+                Label:"# Writes"
+                Name:"l1tex__data_bank_writes.sum"
+            }
+            Metrics{
+                Label:"# Reads"
+                Name:"l1tex__data_bank_reads.sum"
+            }
+            Metrics{
+                Label:"Conflict due to LSU"
+                Name:"l1tex__data_bank_conflicts_pipe_lsu.sum"
+            }
+            Metrics{
+                Label:"Conflict due to LSU Reads"
+                Name:"l1tex__data_bank_conflicts_pipe_lsu_cmd_read.sum"
+            }
+            Metrics{
+                Label:"Conflict due to LSU Writes"
+                Name:"l1tex__data_bank_conflicts_pipe_lsu_cmd_write.sum"
+            }
+            Metrics{
+                Label:"Conflict due to LSU GMem"
+                Name:"l1tex__data_bank_conflicts_pipe_lsu_mem_global.sum"
+            }
+            Metrics{
+                Label:"Conflict due to LSU SMem"
+                Name:"l1tex__data_bank_conflicts_pipe_lsu_mem_shared.sum"
+            }
+        }
+    }
+}
+
+Body {
+  Items {
+    MemorySharedTable {
+      Label: "Shared Memory"
+    }
+  }
+}

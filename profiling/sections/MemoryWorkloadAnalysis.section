@@ -1,0 +1,68 @@
+Identifier: "MemoryWorkloadAnalysis"
+DisplayName: "Memory Workload Analysis"
+Description: "Detailed analysis of the memory resources of the GPU. Memory can become a limiting factor for the overall kernel performance when fully utilizing the involved hardware units (Mem Busy), exhausting the available communication bandwidth between those units (Max Bandwidth), or by reaching the maximum throughput of issuing memory instructions (Mem Pipes Busy)."
+Order: 30
+Sets {
+  Identifier: "detailed"
+}
+Sets {
+  Identifier: "full"
+}
+Header {
+  Metrics {
+    Label: "Memory Throughput"
+    Name: "dram__bytes.sum.per_second"
+    Filter {
+      MaxArch: CC_70
+    }
+    Options {
+      Name: "dram__bytes.sum.per_second"
+      Filter {
+        MinArch: CC_75
+        MaxArch: CC_86
+      }
+    }
+    Options {
+      Name: "dram__bytes.sum.per_second"
+      Filter {
+        MinArch: CC_89
+      }
+    }
+  }
+  Metrics {
+    Label: "Mem Busy"
+    Name: "gpu__compute_memory_access_throughput.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "L1/TEX Hit Rate"
+    Name: "l1tex__t_sector_hit_rate.pct"
+  }
+  Metrics {
+    Label: "Max Bandwidth"
+    Name: "gpu__compute_memory_request_throughput.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "L2 Hit Rate"
+    Name: "lts__t_sector_hit_rate.pct"
+  }
+  Metrics {
+    Label: "Mem Pipes Busy"
+    Name: "sm__memory_throughput.avg.pct_of_peak_sustained_elapsed"
+  }
+  Metrics {
+    Label: "L2 Compression Success Rate"
+    Name: "lts__average_gcomp_input_sector_success_rate.pct"
+    Filter {
+      MinArch: CC_80
+      MaxArch: CC_89
+    }
+  }
+  Metrics {
+    Label: "L2 Compression Ratio"
+    Name: "lts__average_gcomp_output_sector_compression_achieved_rate.ratio"
+    Filter {
+      MinArch: CC_80
+      MaxArch: CC_89
+    }
+  }
+}
