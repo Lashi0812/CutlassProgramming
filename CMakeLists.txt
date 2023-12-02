@@ -21,12 +21,13 @@ foreach(CUDA_SOURCE_FILE ${CUDA_SOURCE_FILES})
 
     # Create an executable for each source file
     add_executable(${EXECUTABLE_NAME} ${CUDA_SOURCE_FILE})
-    set_target_properties(${EXECUTABLE_NAME} PROPERTIES CXX_STANDARD 17 CUDA_ARCHITECTURES 89 CUDA_SEPARABLE_COMPILATION ON)
+    set_target_properties(${EXECUTABLE_NAME} PROPERTIES CXX_STANDARD 17 CUDA_ARCHITECTURES 89)
     if(containsAten GREATER -1)
         message(STATUS "Linking torch libraries to ${EXECUTABLE_NAME}")
         target_link_libraries(${EXECUTABLE_NAME} "${TORCH_LIBRARIES}")
     endif()
     # target_compile_options(${EXECUTABLE_NAME} PRIVATE -G -g)
+    target_compile_options(${EXECUTABLE_NAME} PRIVATE -O3 -lineinfo)
 endforeach()
 
 # add_executable(test "./csrc/intTuple.cu")
