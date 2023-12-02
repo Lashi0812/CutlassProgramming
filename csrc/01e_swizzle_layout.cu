@@ -1,4 +1,5 @@
 #include "cute/layout.hpp"
+#include "cute/layout_composed.hpp"
 #include "cute/swizzle.hpp"
 #include <latex.hpp>
 
@@ -36,8 +37,21 @@ void test_swizzle_examples(int ps) {
 
     test_swizzle<Swizzle<2, 2, 2>, Layout<Shape<_4, _16>, Stride<_16, _1>>>("Sw222_L4x16", ps);
     test_swizzle<Swizzle<2, 2, 2>, Layout<Shape<_8, _16>, Stride<_16, _1>>>("Sw222_L8x16", ps);
+
+    test_swizzle<Swizzle<3, 3, 3>, Layout<Shape<_8, _64>, Stride<_64, _1>>>("Sw333_L8x64", ps);
+    print_latex(Layout<Shape<_16, _32>, Stride<_32, _1>>{}, "L16x16");
     if (ps == 1)
         print_latex_footer();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          Tile to Shape
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+void test_tile_to_shape() {
+    auto comp = composition(Swizzle<2, 0, 2>{}, Layout<Shape<_4, _4>, Stride<_4, _1>>{});
+    auto shape = tile_to_shape(comp, Shape<_8, _8>{});
+    print_layout(shape);
 }
 
 int main(int argc, char *argv[]) {
@@ -45,4 +59,5 @@ int main(int argc, char *argv[]) {
     if (argc >= 2)
         ps = atoi(argv[1]);
     test_swizzle_examples(ps);
+    // test_tile_to_shape();
 }
