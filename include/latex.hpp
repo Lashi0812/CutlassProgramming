@@ -54,7 +54,6 @@ CUTE_HOST_DEVICE void print_latex_footer() { printf("\\end{document}\n"); }
 // hf == 2 picture + footer
 // hf == 3 header +  picture + footer
 
-
 // Generic 2D Layout to Latex printer -- B&W 8-value color coding
 template <class Layout>
 CUTE_HOST_DEVICE void
@@ -200,11 +199,11 @@ CUTE_HOST_DEVICE void print_latex(
 //////////////////////////////////////////////////////////////////////////////////////////
 
 template <class... Args>
-CUTE_HOST_DEVICE auto print_latex(TiledCopy<Args...> const &copy, const char *name) {
+CUTE_HOST_DEVICE auto print_latex(TiledCopy<Args...> const &copy, const char *name, int hf = 0) {
     auto [layoutS_MN, thrID_S] = copy.get_layoutS_MN();
     auto [layoutD_MN, thrID_D] = copy.get_layoutD_MN();
 
-    print_latex_copy(layoutS_MN, thrID_S, layoutD_MN, thrID_D, name);
+    print_latex_copy(layoutS_MN, thrID_S, layoutD_MN, thrID_D, name, hf);
 }
 
 // MNK Copy Layout to Latex TIKZ -- 8-value color coded by thread
@@ -322,7 +321,7 @@ CUTE_HOST_DEVICE void print_latex_copy(
     // Footer
     printf("\\end{tikzpicture}\n");
     if (hf & 1)
-        print_latex_header();
+        print_latex_footer();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

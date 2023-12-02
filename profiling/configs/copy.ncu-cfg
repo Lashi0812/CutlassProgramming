@@ -1,0 +1,4 @@
+[Launch-and-attach]
+-f
+--section = LoadMetrics,StoreMetrics,SchedulerStats,WarpStateStats,MemoryWorkloadAnalysis,MemoryWorkloadAnalysis_Chart,MemoryWorkloadAnalysis_Tables,InstructionStats,SourceCounters
+--section-folder-recursive = /workspaces/CutlassProgramming/profiling/sections
