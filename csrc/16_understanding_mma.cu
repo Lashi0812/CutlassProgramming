@@ -7,16 +7,6 @@
 
 using namespace cute;
 
-template <typename Args>
-void custom_print(Args args, const char *name, int ps = -1) {
-    if (ps == 0)
-        print_layout(args);
-    else if (ps == 1)
-        print_latex(args, name);
-    else
-        print(args);
-}
-
 ////////////////////////////////////////////////////////////////////////////////////////////
 //                      Tiled MMA
 ////////////////////////////////////////////////////////////////////////////////////////////
