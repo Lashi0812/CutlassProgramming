@@ -320,7 +320,7 @@ CUTE_HOST_DEVICE void print_latex_copy(
 
     // Footer
     printf("\\end{tikzpicture}\n");
-    if (hf & 1)
+    if ((hf >> 1) & 1)
         print_latex_footer();
 }
 
