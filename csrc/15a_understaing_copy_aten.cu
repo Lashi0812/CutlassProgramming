@@ -1,4 +1,4 @@
-#include "cute/stride.hpp"
+#include "cute/swizzle.hpp"
 #include "cute/tensor.hpp"
 #include "cute/algorithm/functional.hpp"
 #include "cute/algorithm/tensor_algorithms.hpp"
@@ -11,6 +11,7 @@
 #include "cute/algorithm/copy.hpp"
 #include <ATen/ATen.h>
 #include <iostream>
+#include <numeric>
 
 
 using namespace cute;
@@ -26,8 +27,12 @@ __global__ void copy_kernel(T const *in, T *out) {
     TiledCopy tiled_copy;
     __shared__ T smemA[cosize_v<Layout<typename TiledCopy::TiledShape_MN>>];
 
+    auto swizzle_layout = composition(Swizzle<2, 3, 3>{}, Layout<Shape<_16, _16>>{});
+    // auto smem_layout = tile_to_shape(swizzle_layout, Shape<_16, _16>{});
     auto gA = make_tensor(make_gmem_ptr(in), typename TiledCopy::TiledShape_MN{});
-    auto sA = make_tensor(make_smem_ptr(smemA), typename TiledCopy::TiledShape_MN{});
+    // auto sA = make_tensor(make_smem_ptr(smemA), typename TiledCopy::TiledShape_MN{});
+
+    auto sA = make_tensor(make_smem_ptr(smemA), swizzle_layout);
     auto gC = make_tensor(make_gmem_ptr(out), typename TiledCopy::TiledShape_MN{});
 
     auto thr_copy = tiled_copy.get_slice(threadIdx.x);
@@ -37,26 +42,74 @@ __global__ void copy_kernel(T const *in, T *out) {
 
     auto tArA = make_fragment_like(tAsA);
 
-    // if (thread0()) {
-    //     // clang-format off
-    //     print(gA);print("\n");
-    //     print(sA);print("\n");
-    //     print(tAgA);print("\n");
-    //     print(tAsA);print("\n");
-    //     print("Common Vector : ");print(max_common_vector(tAgA, tAsA));print("\n");
-    //     // clang-format on
-    // }
-    copy(tAgA, tAsA);
+    copy(tiled_copy, tAgA, tAsA);
     cp_async_fence();
     cp_async_wait<0>();
-    
+
+    // print_helper(tAgA, tAsA);
+
+    // clang-format off
+        // print(gA);print("\n");
+        // print(sA);print("\n");
+        // print(tAgA);print("\n");
+        // print(tAsA);print("\n");
+        // print("Common Vector GS : ");print(max_common_vector(tAgA, tAsA));print("\n");
+        // print("Common Vector SR : ");print(max_common_vector(tAsA, tArA));print("\n");
+        // print("Common Vector RG : ");print(max_common_vector(tArA, tAgC));print("\n");
+    // clang-format on
+
+    // for (int i{0}; i < size(tAgA); ++i)
+    //     tAsA(i) = tAgA(i);
+    // copy(Copy_Atom<UniversalCopy<uint32_t>,half_t>{},tAgA, tAsA);
+
     copy(tAsA, tArA);
+    // for(int i{0};i<size(tAsA);++i)
+    //   tArA(i) = tAsA(i);
 
     transform(tArA, pre_increment{});
 
     copy(tArA, tAgC);
 }
 
+void test_copy_host() {
+
+    // using TiledCopy = decltype(make_tiled_copy(
+    //   Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>{},
+    //   Layout<Shape<_2, _16>>{},
+    //   Layout<Shape<_8, _1>>{}));
+
+    using TiledCopy = decltype(make_tiled_copy(
+      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<cute::uint32_t>, half_t>{},
+      Layout<Shape<_2, _16>>{},
+      Layout<Shape<_8, _1>>{}));
+
+    TiledCopy tiled_copy;
+    std::vector<int> vecG(256);
+    std::vector<int> vecS(256);
+    std::iota(vecG.begin(), vecG.end(), 0);
+    std::iota(vecS.begin(), vecS.end(), 0);
+
+    auto swizzle_layout = composition(Swizzle<3, 1, 5>{}, Layout<Shape<_16, _16>>{});
+    // auto smem_layout = tile_to_shape(swizzle_layout, Shape<_16, _16>{});
+    // auto gA = make_counting_tensor(Layout<typename TiledCopy::TiledShape_MN>{});
+    // auto sA = make_counting_tensor(Layout<typename TiledCopy::TiledShape_MN>{});
+    auto gA = make_tensor(vecG.data(), Layout<typename TiledCopy::TiledShape_MN>{});
+    auto sA = make_tensor(vecS.data(), swizzle_layout);
+
+    auto thr_copy = tiled_copy.get_slice(8);
+    auto tAgA = thr_copy.partition_S(gA);
+    auto tAsA = thr_copy.partition_D(sA);
+
+    // copy(tAgA, tAsA);
+
+    // clang-format off
+    print(gA);print("\n");
+    print(sA);print("\n");print_tensor(sA);    
+    print(tAgA);print("\n");print_tensor(tAgA);
+    print(tAsA);print("\n");print_tensor(tAsA);
+    print("Common Vector : ");print(max_common_vector(tAgA, tAsA));print("\n");
+    // clang-format on
+}
 
 void test_normal_copy() {
     using tiled_copy = decltype(make_tiled_copy(
@@ -84,11 +137,11 @@ void test_normal_copy() {
 
     cudaFree(d_in);
     cudaFree(d_out);
-
-    // print_latex(tiled_copy{}, "CP_T16x2_V1x8", 3);
 }
 
 int main() {
     test_normal_copy();
     cudaDeviceReset();
+
+    // test_copy_host();
 }
