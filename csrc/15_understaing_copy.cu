@@ -1,3 +1,4 @@
+#include "cute/arch/copy_sm75.hpp"
 #include "cute/numeric/int.hpp"
 #include "cute/util/print.hpp"
 #include "cutlass/half.h"
@@ -149,7 +150,7 @@ void test_make_tiled_copy_examples(int ps = 0) {
 
     test_make_tiled_copy<Layout<Shape<_4, _8>>, Layout<Shape<_4, _2>>, uint64_t, half_t>(
       "CP_T4x8_V4x2", ps);
-    
+
     test_make_tiled_copy<Layout<Shape<_8, _4>>, Layout<Shape<_2, _4>>, uint32_t, half_t>(
       "CP_T8x4_V2x4_Pa32B_Or16B", ps);
     if (ps == 1)
@@ -239,6 +240,29 @@ void test_get_slice_examples(int ps) {
       0>(ps);
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                      LD Matrix Traits
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename Operation>
+void test_ldmatrix_traits(char const *test_name) {
+    using traits = Copy_Traits<Operation>;
+
+    print_latex(typename traits::SrcLayout{}, test_name);
+    print_latex(typename traits::DstLayout{}, test_name);
+    print_latex(typename traits::RefLayout{}, test_name);
+}
+
+void test_ldmatrix_traits_examples() {
+    print_latex_header();
+    test_ldmatrix_traits<SM75_U32x1_LDSM_N>("SM75_U32x1_LDSM_N");
+    test_ldmatrix_traits<SM75_U32x2_LDSM_N>("SM75_U32x2_LDSM_N");
+    test_ldmatrix_traits<SM75_U32x4_LDSM_N>("SM75_U32x4_LDSM_N");
+    test_ldmatrix_traits<SM75_U16x2_LDSM_T>("SM75_U16x2_LDSM_T");
+    test_ldmatrix_traits<SM75_U16x4_LDSM_T>("SM75_U16x4_LDSM_T");
+    test_ldmatrix_traits<SM75_U16x8_LDSM_T>("SM75_U16x8_LDSM_T");
+    print_latex_footer();
+}
+
 int main(int argc, char *argv[]) {
     // print_select
     [[maybe_unused]] int ps{-1};
@@ -247,8 +271,9 @@ int main(int argc, char *argv[]) {
 
     // test_copy_trait_examples();
     // test_copy_atom_examples();
-    test_make_tiled_copy_examples(ps);
+    // test_make_tiled_copy_examples(ps);
     // test_get_layouts_examples();
     // test_tile2frag_examples(ps);
     // test_get_slice_examples(ps);
+    test_ldmatrix_traits_examples();
 }
