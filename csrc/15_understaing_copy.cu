@@ -2,6 +2,7 @@
 #include "cute/util/print.hpp"
 #include "cutlass/half.h"
 #include "latex.hpp"
+#include <cstdint>
 #include <cute/algorithm/copy.hpp>
 
 using namespace cute;
@@ -148,6 +149,9 @@ void test_make_tiled_copy_examples(int ps = 0) {
 
     test_make_tiled_copy<Layout<Shape<_4, _8>>, Layout<Shape<_4, _2>>, uint64_t, half_t>(
       "CP_T4x8_V4x2", ps);
+    
+    test_make_tiled_copy<Layout<Shape<_8, _4>>, Layout<Shape<_2, _4>>, uint32_t, half_t>(
+      "CP_T8x4_V2x4_Pa32B_Or16B", ps);
     if (ps == 1)
         print_latex_footer();
 }
