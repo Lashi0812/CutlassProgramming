@@ -1,7 +1,9 @@
+#include "cute/tensor.hpp"
 #include "cute/arch/copy_sm75.hpp"
+#include "cute/atom/copy_atom.hpp"
+#include "cute/layout.hpp"
 #include "cute/numeric/int.hpp"
 #include "cute/util/print.hpp"
-#include "cutlass/half.h"
 #include "latex.hpp"
 #include <cstdint>
 #include <cute/algorithm/copy.hpp>
@@ -263,6 +265,45 @@ void test_ldmatrix_traits_examples() {
     print_latex_footer();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                  LD Matrix copy Atom
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Operation, typename T, typename ThrLayout, typename ValLayout>
+void test_ldmatrix_copy_atom(char const *test_name) {
+    using atom = decltype(make_tiled_copy(Copy_Atom<Operation, T>{}, ThrLayout{}, ValLayout{}));
+
+    print_latex(atom{}, test_name);
+}
+
+void test_ldmatrix_copy_atom_examples() {
+    print_latex_header();
+    test_ldmatrix_copy_atom<
+      SM75_U32x1_LDSM_N,
+      half_t,
+      Layout<Shape<_4, _8>>,
+      Layout<Shape<_2, _1>>>("ldmatrix_num1_T4x8_V2x1");
+
+    test_ldmatrix_copy_atom<
+      SM75_U32x1_LDSM_N,
+      half_t,
+      Layout<Shape<_8, _4>>,
+      Layout<Shape<_1, _2>>>("ldmatrix_num1_T8x4_V1x2");
+
+    test_ldmatrix_copy_atom<
+      SM75_U32x1_LDSM_N,
+      half_t,
+      Layout<Shape<_32, _1>>,
+      Layout<Shape<_1, _8>>>("ldmatrix_num1_T32x1_V1x8");
+
+    test_ldmatrix_copy_atom<
+      SM75_U32x2_LDSM_N,
+      half_t,
+      Layout<Shape<_32, _1>>,
+      Layout<Shape<_1, _4>>>("ldmatrix_num2_T32x1_V1x4");
+    print_latex_footer();
+}
+
 int main(int argc, char *argv[]) {
     // print_select
     [[maybe_unused]] int ps{-1};
@@ -275,5 +316,6 @@ int main(int argc, char *argv[]) {
     // test_get_layouts_examples();
     // test_tile2frag_examples(ps);
     // test_get_slice_examples(ps);
-    test_ldmatrix_traits_examples();
+    // test_ldmatrix_traits_examples();
+    test_ldmatrix_copy_atom_examples();
 }

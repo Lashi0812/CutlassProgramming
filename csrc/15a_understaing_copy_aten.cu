@@ -9,17 +9,16 @@
 #include "cute/numeric/half.hpp"
 #include "cute/atom/copy_atom.hpp"
 #include "cute/algorithm/copy.hpp"
+#include "cute/util/debug.hpp"
 #include <ATen/ATen.h>
 #include <iostream>
 #include <numeric>
-
 
 using namespace cute;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 //                      Generic Copy using LD
 ///////////////////////////////////////////////////////////////////////////////////////////////
-
 
 template <typename TiledCopy, typename T>
 __global__ void copy_kernel(T const *in, T *out) {
@@ -139,8 +138,86 @@ void test_normal_copy() {
     cudaFree(d_out);
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                          ldmatrix copy
+// * Moving the data from shared memory to Register.
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename GmemTiledCopy, typename SmemCopyAtom, typename SmemLayout, typename T>
+__global__ void matrix_copy_kernel(T const *in, T *out) {
+    __shared__ T smem[cosize_v<SmemLayout>];
+
+    GmemTiledCopy tiled_copy;
+    auto gA = make_tensor(make_gmem_ptr(in), SmemLayout{});
+    auto sA = make_tensor(make_smem_ptr(smem), SmemLayout{});
+    auto gC = make_tensor(make_gmem_ptr(out), SmemLayout{});
+
+    auto thr_copy = tiled_copy.get_thread_slice(threadIdx.x);
+    auto tAgA = thr_copy.partition_S(gA);
+    auto tAsA = thr_copy.partition_D(sA);
+
+    copy(tiled_copy, tAgA, tAsA);
+    cp_async_fence();
+    cp_async_wait<0>();
+
+    SmemCopyAtom smem_copy_atom;
+    auto smem_thr_copy = smem_copy_atom.get_thread_slice(threadIdx.x);
+    auto tCsA = smem_thr_copy.partition_S(sA);
+    auto tCgc = smem_thr_copy.partition_D(gC);
+    auto tCrA = make_tensor<T>(shape(tCgc));
+    clear(tCrA);
+
+    // if (thread0()) {
+    //     print(tAsA);
+    //     print(tCrA);
+    //     print(tCsA);
+    // }
+    copy(smem_copy_atom, tCsA, tCrA);
+
+    transform(tCrA, pre_increment{});
+
+    copy(tCrA, tCgc);
+}
+
+void test_matrix_copy() {
+    using gmem_tiled_copy = decltype(make_tiled_copy(
+      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint32_t>, half_t>{},
+      Layout<Shape<_8, _4>>{},
+      Layout<Shape<_1, _2>>{}));
+
+    using smem_layout = Layout<Shape<_8, Shape<_2,_4>>,Stride<_2,Stride<_1,_16>>>;
+    // using smem_layout = Layout<Shape<_8, _8>>;
+    using smem_copy_atom = decltype(make_tiled_copy(
+      Copy_Atom<SM75_U32x1_LDSM_N, half_t>{}, Layout<Shape<_8, _4>>{}, Layout<Shape<_1, _2>>{}));
+
+    auto in =
+      at::arange(
+        decltype(size(gmem_tiled_copy::TiledShape_MN{}))::value,
+        at::TensorOptions().dtype(at::kHalf))
+        .reshape(
+          {size<0>(gmem_tiled_copy::TiledShape_MN{}), size<1>(gmem_tiled_copy::TiledShape_MN{})});
+
+    auto out = at::zeros_like(in);
+
+    half_t *d_in, *d_out;
+    cudaMalloc((void **)&d_in, in.numel() * in.element_size());
+    cudaMalloc((void **)&d_out, out.numel() * out.element_size());
+
+    cudaMemcpy(d_in, in.data_ptr(), in.numel() * in.element_size(), cudaMemcpyHostToDevice);
+    cudaMemcpy(d_out, out.data_ptr(), out.numel() * out.element_size(), cudaMemcpyHostToDevice);
+
+    matrix_copy_kernel<gmem_tiled_copy, smem_copy_atom, smem_layout><<<1, 32>>>(d_in, d_out);
+    cudaMemcpy(out.data_ptr(), d_out, out.numel() * out.element_size(), cudaMemcpyDeviceToHost);
+    std::cout << out << std::endl;
+
+    cudaFree(d_in);
+    cudaFree(d_out);
+}
+
 int main() {
-    test_normal_copy();
+    // test_normal_copy();
+
+    test_matrix_copy();
     cudaDeviceReset();
 
     // test_copy_host();
