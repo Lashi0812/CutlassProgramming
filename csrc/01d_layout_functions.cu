@@ -1,3 +1,10 @@
+#include "cute/algorithm/tuple_algorithms.hpp"
+#include "cute/container/tuple.hpp"
+#include "cute/int_tuple.hpp"
+#include "cute/numeric/int.hpp"
+#include "cute/tensor.hpp"
+#include "cute/util/print.hpp"
+#include "cutlass/half.h"
 #include "latex.hpp"
 #include <cute/layout.hpp>
 #include <cute/algorithm/copy.hpp>
@@ -180,7 +187,8 @@ void test_right_inverse_examples(int ps) {
 
 template <typename A, typename B>
 void test_composition(int ps) {
-    auto res = composition(A{}, B{});
+    // auto res = composition(A{}, B{});
+    auto res = A{}.compose(B{}, _);
 
     // clang-format off
     print("Input  : ");custom_print(A{},ps);print(" , ");custom_print(B{},ps);print("\n");
@@ -190,13 +198,15 @@ void test_composition(int ps) {
 
 void test_composition_examples(int ps) {
 
-    test_composition<
-      Layout<Shape<Int<20>, _2>, Stride<_16, _4>>,
-      Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
+    // test_composition<
+    //   Layout<Shape<Int<20>, _2>, Stride<_16, _4>>,
+    //   Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
 
-    test_composition<
-      Layout<Shape<_2, _32>, Stride<_32, _1>>,
-      Layout<Shape<Shape<_8, _4>, _8>, Stride<Stride<_8, _0>, _1>>>(ps);
+    test_composition<Layout<Shape<Shape<_2, _4>, Shape<_3, _5>>>, Layout<Shape<_1, _2>>>(ps);
+
+    // test_composition<
+    //   Layout<Shape<_2, _32>, Stride<_32, _1>>,
+    //   Layout<Shape<Shape<_8, _4>, _8>, Stride<Stride<_8, _0>, _1>>>(ps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -381,6 +391,34 @@ void test_zipped_product_examples(int ps) {
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          zipped divide
+// Layout   ==> thr,val
+// tile     ==> g_thr,g_val  gather
+// zip_div  ==> (g_thr,g_val),(r_thr,r_val) reminder
+
+// Layout   ==> ((_2,_3),(_4,_6)):((_1,_2),(_6,_24))
+// tile     ==> (_1,_8)
+// zip_div  ==> ((_1,_8),(_6,_3)):((_0,_6),(_1,_48))
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Layout, typename Tile>
+void test_zipped_divide(int ps) {
+    auto res = zipped_divide(Layout{}, Tile{});
+
+    // clang-format off
+    print("Input : ");custom_print(Layout{},ps);print(" , ");print(Tile{});print("\n");
+    custom_print(res,ps);print("\n");
+    // clang-format on
+}
+
+void test_zipped_divide_examples(int ps) {
+    test_zipped_divide<Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>>, Shape<_1, _8>>(ps);
+    test_zipped_divide<
+      Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>, Stride<Stride<_4, Int<48>>, Stride<_1, _8>>>,
+      Shape<_1, _8>>(ps);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
 //                          tiled product
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -493,13 +531,128 @@ void test_build_layoutTV(std::string test_name) {
     print("%% val_thr_layout : ");print(val_thr_layout);
     // clang-format on
     print_latex(thr_val_layout, (test_name + std::string("_thr_val_layout")).c_str());
-
 }
 
 void test_build_layoutTV_examples() {
     print_latex_header();
     test_build_layoutTV<Layout<Shape<_2, _3>>, Layout<Shape<_4, _5>>>("T2x3_V4x5");
     print_latex_footer();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                  TidFrag
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename ThrLayout, typename ValLayout>
+void test_tidFrag(std::string test_name) {
+    using tiled_copy = decltype(make_tiled_copy(
+      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>{}, ThrLayout{}, ValLayout{}));
+
+    auto mn_layout =
+      make_layout(product_each(zip((typename tiled_copy::TiledShape_MN{}), make_tuple(2, 2))));
+
+    auto res = tiled_copy::tidfrg_S(mn_layout);
+    auto res_tensor = make_counting_tensor(res);
+
+    // print_latex(mn_layout, (test_name + "_mn_layout").c_str());
+    // print_latex(res, (test_name + "_tidfrg_S").c_str());
+    print(mn_layout);
+    print("\n");
+    print(res);
+    print("\n");
+    print(coalesce(res));
+    print_tensor(res_tensor);
+}
+
+void test_tidFrag_examples() {
+    // print_latex_header();
+    test_tidFrag<Layout<Shape<_2, _3>>, Layout<Shape<_4, _6>>>("tidFrag_T2x3_V4x6");
+    // print_latex_footer();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                  Tile to Thread Frag
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename SB, typename VB, typename ThrLayout, typename ValLayout, typename RestShape_MN>
+void test_tile_thrFrag(std::string test_name, int ps) {
+    using tiled_copy = decltype(make_tiled_copy(
+      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<SB>, VB>{}, ThrLayout{}, ValLayout{}));
+
+    auto thr_copy = tiled_copy{}.get_thread_slice(1);
+
+    auto mn_layout =
+      make_layout(product_each(zip((typename tiled_copy::TiledShape_MN{}), RestShape_MN{})));
+    
+    auto mn_tensor = make_counting_tensor(mn_layout);
+
+    // auto mn_layout = make_layout(typename tiled_copy::TiledShape_MN{});
+
+    auto tile = zipped_divide(mn_layout, typename tiled_copy::Tiler_MN{});
+    auto ref2trg = right_inverse(typename tiled_copy::AtomLayoutRef{})
+                     .compose(typename tiled_copy::AtomLayoutDst{});
+
+    auto atom_layout_TV = zipped_divide(
+      typename tiled_copy::TiledLayout_TV{},
+      make_shape(typename tiled_copy::AtomNumThr{}, typename tiled_copy::AtomNumVal{}));
+
+    auto trg_layout_TV = atom_layout_TV.compose(ref2trg, _);
+    auto thrval2mn = coalesce(zip(trg_layout_TV), Shape<_1, Shape<_1, _1>>{});
+    auto tv_tensor = tile.compose(thrval2mn, _);
+    auto res = tv_tensor(make_coord(_, _), _);
+    auto res_tensor = make_counting_tensor(res);
+    auto part = thr_copy.partition_S(mn_tensor);
+
+    // clang-format off
+    print("%%  AtomThrID      : ");print       (typename tiled_copy::AtomThrID      {}                                         );print("\n");
+    print("%%  AtomLayoutSrc  : ");custom_print(typename tiled_copy::AtomLayoutSrc  {},(test_name+"_AtomLayoutSrc").c_str(),ps );print("\n");
+    print("%%  AtomLayoutDst  : ");print       (typename tiled_copy::AtomLayoutDst  {}                                         );print("\n");
+    print("%%  AtomLayoutRef  : ");print       (typename tiled_copy::AtomLayoutRef  {}                                         );print("\n");
+    print("%%  AtomNumThr     : ");print       (typename tiled_copy::AtomNumThr     {}                                         );print("\n");
+    print("%%  AtomNumVal     : ");print       (typename tiled_copy::AtomNumVal     {}                                         );print("\n");
+    print("%%  Tiler_MN       : ");print       (typename tiled_copy::Tiler_MN       {}                                         );print("\n");
+    print("%%  TiledShape_MN  : ");print       (typename tiled_copy::TiledShape_MN  {}                                         );print("\n");
+    print("%%  TiledLayout_TV : ");custom_print(typename tiled_copy::TiledLayout_TV {},(test_name+"_TiledLayout_TV").c_str(),ps);print("\n");
+    print("%%  TiledNumThr    : ");print       (typename tiled_copy::TiledNumThr    {}                                         );print("\n");
+    print("%%  TiledNumVal    : ");print       (typename tiled_copy::TiledNumVal    {}                                         );print("\n");
+    print("%%  TiledCopy      : ");print       (         tiled_copy                 {}                                         );print("\n");
+    if(ps==1)
+        {print("%%  TiledCopy      : ");print_latex(         tiled_copy                 {},(test_name+"_TiledCopy").c_str(),ps     );print("\n");}
+
+
+    print("%%  Mn_Layout      : ");custom_print(mn_layout      ,(test_name+"_Mn_Layout"      ).c_str(),ps );print("\n");
+    print("%%  Tile           : ");custom_print(tile           ,(test_name+"_Tile"           ).c_str(),ps );print("\n");
+    print("%%  Ref2trg        : ");custom_print(ref2trg        ,(test_name+"_Ref2trg"        ).c_str(),ps );print("\n");
+    print("%%  Atom_Layout_Tv : ");custom_print(atom_layout_TV ,(test_name+"_Atom_Layout_Tv" ).c_str(),ps );print("\n");
+    print("%%  Trg_Layout_Tv  : ");custom_print(trg_layout_TV  ,(test_name+"_Trg_Layout_Tv"  ).c_str(),ps );print("\n");
+    print("%%  Thrval2mn      : ");custom_print(thrval2mn      ,(test_name+"_Thrval2mn"      ).c_str(),ps );print("\n");
+    print("%%  Tv_Tensor      : ");custom_print(tv_tensor      ,(test_name+"_Tv_Tensor"      ).c_str(),ps );print("\n");
+    
+    print("%%  Tile2Frag      : " );print       (res        );print("\n");
+    if(ps !=1)
+        {
+        print("%% Tile2Frag       : " );print_tensor(res_tensor );print("\n");
+        print("%% Partition       : " );print_tensor(part       );print("\n");
+        }
+    // clang-format on
+}
+
+void test_tile_thrFrag_examples(int ps) {
+    if (ps == 1)
+        print_latex_header();
+    test_tile_thrFrag<
+      uint32_t,
+      half_t,
+      Layout<Shape<_2, _2>>,
+      Layout<Shape<_2, _2>>,
+      Shape<_2, _2>>("tile2Frag_T2x2_V2x2", ps);
+    // test_tile_thrFrag<
+    //   uint128_t,
+    //   half_t,
+    //   Layout<Shape<_2, _3>>,
+    //   Layout<Shape<_4, _6>>,
+    //   Shape<_2, _2>>("tile2Frag_T2x3_V4x6", ps);
+    if (ps == 1)
+        print_latex_footer();
 }
 
 int main(int argc, char *argv[]) {
@@ -523,7 +676,10 @@ int main(int argc, char *argv[]) {
     // test_raked_product_examples(ps);
     // test_with_shape_examples(ps);
     // test_zipped_product_examples(ps);
+    // test_zipped_divide_examples(ps);
     // test_tiled_product_examples();
     // test_max_common_vector_examples();
-    test_build_layoutTV_examples();
+    // test_build_layoutTV_examples();
+    // test_tidFrag_examples();
+    test_tile_thrFrag_examples(ps);
 }
