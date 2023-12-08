@@ -1,5 +1,7 @@
+#include "latex.hpp"
 #include <cute/layout.hpp>
 #include <cute/algorithm/copy.hpp>
+#include <string>
 
 using namespace cute;
 
@@ -162,12 +164,14 @@ void test_right_inverse(int ps) {
 }
 
 void test_right_inverse_examples(int ps) {
-    test_right_inverse<Layout<Shape<_4>, Stride<_1>>>(ps);
-    test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _4>>>(ps);
-    test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _5>>>(ps);
-    test_right_inverse<Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
-    test_right_inverse<Layout<Shape<_4, _5>, Stride<_5, _1>>>(ps);
+    // test_right_inverse<Layout<Shape<_4>, Stride<_1>>>(ps);
+    // test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _4>>>(ps);
+    // test_right_inverse<Layout<Shape<_4, _4>, Stride<_1, _5>>>(ps);
+    // test_right_inverse<Layout<Shape<_4, _5>, Stride<_1, _4>>>(ps);
+    // test_right_inverse<Layout<Shape<_4, _5>, Stride<_5, _1>>>(ps);
     test_right_inverse<Layout<Shape<_16, Shape<_8, _8>>, Stride<_8, Stride<_128, _1>>>>(ps);
+    // test_right_inverse<Layout<Shape<Shape<_3,_2>,Shape<_4,_2>>,Stride<Stride<_4,_1>,Stride<_12,_2>>>>(ps);
+    // test_right_inverse<Layout<Shape<_32,_8>,Stride<_1,_32>>>(ps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -332,6 +336,8 @@ void test_raked_product(int ps) {
 
 void test_raked_product_examples(int ps) {
     test_raked_product<Layout<Shape<_16, _8>, Stride<_8, _1>>, Layout<Shape<_1, _8>>>(ps);
+    // test_raked_product<Layout<Shape<_2, _2>>, Layout<Shape<_3, _4>>>(ps);
+    // test_raked_product<Layout<Shape<_32, _1>>, Layout<Shape<_1, _8>>>(ps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -343,13 +349,14 @@ void test_with_shape(int ps) {
     auto res = Layout{}.with_shape(Shape{});
 
     // clang-format off
-    print("Input  : ");custom_print(Layout{},ps);print(" , ");print(Shape{});print("\n");
+    print("Input  : ");print(Layout{});print(" , ");print(Shape{});print("\n");
     print("Output : ");custom_print(res,ps);print("\n");
     // clang-format on
 }
 
 void test_with_shape_examples(int ps) {
     test_with_shape<Layout<Shape<_8, _128>, Stride<_128, _1>>, Shape<_128, _8>>(ps);
+    // test_with_shape<Layout<Shape<_2,_2,_3,_4>,Stride<_3,_24,_1,_6>>,Shape<_4,_12>>(ps);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -466,6 +473,35 @@ void test_max_common_vector_examples() {
       Layout<Shape<Shape<_8, _1>, _1, _1>, Stride<Stride<_1, _0>, _0, _0>>>();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              Thread Layout and Val Layout
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename ThrLayout, typename ValLayout>
+void test_build_layoutTV(std::string test_name) {
+    auto interleaved = raked_product(ThrLayout{}, ValLayout{});
+    auto val_thr_layout = right_inverse(interleaved);
+    auto thr_val_layout =
+      val_thr_layout.with_shape(make_shape(size(ThrLayout{}), size(ValLayout{})));
+    auto mn_layout = make_layout(product_each(shape(interleaved)));
+    auto zip_div = zipped_divide(mn_layout, shape(ValLayout{}));
+
+    print_latex(mn_layout, (test_name + std::string("_mn")).c_str());
+    print_latex(zip_div, (test_name + std::string("_zip_div")).c_str());
+    print_latex(interleaved, (test_name + std::string("_interleaved")).c_str());
+    // clang-format off
+    print("%% val_thr_layout : ");print(val_thr_layout);
+    // clang-format on
+    print_latex(thr_val_layout, (test_name + std::string("_thr_val_layout")).c_str());
+
+}
+
+void test_build_layoutTV_examples() {
+    print_latex_header();
+    test_build_layoutTV<Layout<Shape<_2, _3>>, Layout<Shape<_4, _5>>>("T2x3_V4x5");
+    print_latex_footer();
+}
+
 int main(int argc, char *argv[]) {
     // print_select
     [[maybe_unused]] int ps{-1};
@@ -488,5 +524,6 @@ int main(int argc, char *argv[]) {
     // test_with_shape_examples(ps);
     // test_zipped_product_examples(ps);
     // test_tiled_product_examples();
-    test_max_common_vector_examples();
+    // test_max_common_vector_examples();
+    test_build_layoutTV_examples();
 }
