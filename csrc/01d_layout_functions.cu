@@ -2,9 +2,9 @@
 #include "cute/container/tuple.hpp"
 #include "cute/int_tuple.hpp"
 #include "cute/numeric/int.hpp"
+#include "cute/numeric/integral_constant.hpp"
 #include "cute/tensor.hpp"
 #include "cute/util/print.hpp"
-#include "cutlass/half.h"
 #include "latex.hpp"
 #include <cute/layout.hpp>
 #include <cute/algorithm/copy.hpp>
@@ -573,16 +573,15 @@ void test_tidFrag_examples() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                  Tile to Thread Frag
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename SB, typename VB, typename ThrLayout, typename ValLayout, typename RestShape_MN>
+template <typename CopyAtom, typename ThrLayout, typename ValLayout, typename RestShape_MN>
 void test_tile_thrFrag(std::string test_name, int ps) {
-    using tiled_copy = decltype(make_tiled_copy(
-      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<SB>, VB>{}, ThrLayout{}, ValLayout{}));
+    using tiled_copy = decltype(make_tiled_copy(CopyAtom{}, ThrLayout{}, ValLayout{}));
 
     auto thr_copy = tiled_copy{}.get_thread_slice(1);
 
     auto mn_layout =
       make_layout(product_each(zip((typename tiled_copy::TiledShape_MN{}), RestShape_MN{})));
-    
+
     auto mn_tensor = make_counting_tensor(mn_layout);
 
     // auto mn_layout = make_layout(typename tiled_copy::TiledShape_MN{});
@@ -605,8 +604,8 @@ void test_tile_thrFrag(std::string test_name, int ps) {
     // clang-format off
     print("%%  AtomThrID      : ");print       (typename tiled_copy::AtomThrID      {}                                         );print("\n");
     print("%%  AtomLayoutSrc  : ");custom_print(typename tiled_copy::AtomLayoutSrc  {},(test_name+"_AtomLayoutSrc").c_str(),ps );print("\n");
-    print("%%  AtomLayoutDst  : ");print       (typename tiled_copy::AtomLayoutDst  {}                                         );print("\n");
-    print("%%  AtomLayoutRef  : ");print       (typename tiled_copy::AtomLayoutRef  {}                                         );print("\n");
+    print("%%  AtomLayoutDst  : ");custom_print(typename tiled_copy::AtomLayoutDst  {},(test_name+"_AtomLayoutDst").c_str(),ps );print("\n");
+    print("%%  AtomLayoutRef  : ");custom_print(typename tiled_copy::AtomLayoutRef  {},(test_name+"_AtomLayoutRef").c_str(),ps );print("\n");
     print("%%  AtomNumThr     : ");print       (typename tiled_copy::AtomNumThr     {}                                         );print("\n");
     print("%%  AtomNumVal     : ");print       (typename tiled_copy::AtomNumVal     {}                                         );print("\n");
     print("%%  Tiler_MN       : ");print       (typename tiled_copy::Tiler_MN       {}                                         );print("\n");
@@ -614,9 +613,8 @@ void test_tile_thrFrag(std::string test_name, int ps) {
     print("%%  TiledLayout_TV : ");custom_print(typename tiled_copy::TiledLayout_TV {},(test_name+"_TiledLayout_TV").c_str(),ps);print("\n");
     print("%%  TiledNumThr    : ");print       (typename tiled_copy::TiledNumThr    {}                                         );print("\n");
     print("%%  TiledNumVal    : ");print       (typename tiled_copy::TiledNumVal    {}                                         );print("\n");
-    print("%%  TiledCopy      : ");print       (         tiled_copy                 {}                                         );print("\n");
     if(ps==1)
-        {print("%%  TiledCopy      : ");print_latex(         tiled_copy                 {},(test_name+"_TiledCopy").c_str(),ps     );print("\n");}
+        {print("%%  TiledCopy      : ");print_latex(         tiled_copy                 {},(test_name+"_TiledCopy").c_str()     );print("\n");}
 
 
     print("%%  Mn_Layout      : ");custom_print(mn_layout      ,(test_name+"_Mn_Layout"      ).c_str(),ps );print("\n");
@@ -630,8 +628,9 @@ void test_tile_thrFrag(std::string test_name, int ps) {
     print("%%  Tile2Frag      : " );print       (res        );print("\n");
     if(ps !=1)
         {
-        print("%% Tile2Frag       : " );print_tensor(res_tensor );print("\n");
-        print("%% Partition       : " );print_tensor(part       );print("\n");
+        print("%%  TiledCopy      : " );print       ( tiled_copy {} );print("\n");
+        print("%% Tile2Frag       : " );print_tensor( res_tensor    );print("\n");
+        print("%% Partition       : " );print_tensor( part          );print("\n");
         }
     // clang-format on
 }
@@ -639,18 +638,21 @@ void test_tile_thrFrag(std::string test_name, int ps) {
 void test_tile_thrFrag_examples(int ps) {
     if (ps == 1)
         print_latex_header();
-    test_tile_thrFrag<
-      uint32_t,
-      half_t,
-      Layout<Shape<_2, _2>>,
-      Layout<Shape<_2, _2>>,
-      Shape<_2, _2>>("tile2Frag_T2x2_V2x2", ps);
     // test_tile_thrFrag<
-    //   uint128_t,
-    //   half_t,
+    //   Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint32_t>, half_t>,
+    //   Layout<Shape<_2, _2>>,
+    //   Layout<Shape<_2, _2>>,
+    //   Shape<_2, _1>>("tile2Frag_T2x2_V2x2", ps);
+    // test_tile_thrFrag<
+    //   Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>,
     //   Layout<Shape<_2, _3>>,
     //   Layout<Shape<_4, _6>>,
     //   Shape<_2, _2>>("tile2Frag_T2x3_V4x6", ps);
+    test_tile_thrFrag<
+      Copy_Atom<SM75_U32x1_LDSM_N, half_t>,
+      Layout<Shape<_4, _8>>,
+      Layout<Shape<_2, _1>>,
+      Shape<_2, _2>>("tile2Frag_LDSM_T4x8_V4x2", ps);
     if (ps == 1)
         print_latex_footer();
 }
