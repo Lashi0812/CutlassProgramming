@@ -1,9 +1,11 @@
+#include "cute/tensor.hpp"
 #include "cute/algorithm/tuple_algorithms.hpp"
+#include "cute/arch/mma_sm80.hpp"
+#include "cute/atom/mma_atom.hpp"
 #include "cute/container/tuple.hpp"
 #include "cute/int_tuple.hpp"
 #include "cute/numeric/int.hpp"
 #include "cute/numeric/integral_constant.hpp"
-#include "cute/tensor.hpp"
 #include "cute/util/print.hpp"
 #include "latex.hpp"
 #include <cute/layout.hpp>
@@ -657,6 +659,71 @@ void test_tile_thrFrag_examples(int ps) {
         print_latex_footer();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                              MMa thr Frag
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <
+  typename Operation,
+  typename AtomLayoutMNK = Layout<Shape<_1, _1, _1>>,
+  typename ValLayoutMNK = Layout<Shape<_1, _1, _1>>,
+  typename PermutationsMNK = Tile<Underscore, Underscore, Underscore>>
+void test_mma_thr_Frag(std::string test_name, int ps) {
+    using tiled_mma = TiledMMA<MMA_Atom<Operation>, AtomLayoutMNK, ValLayoutMNK, PermutationsMNK>;
+
+    // clang-format off
+    print("%%  AtomShape_MNK   : ");print       (typename tiled_mma::AtomShape_MNK  {}                                         );print("\n");
+    print("%%  AtomLayoutC_TV  : ");custom_print(typename tiled_mma::AtomLayoutC_TV {},(test_name+"_AtomLayoutC_TV").c_str(),ps);print("\n");
+    print("%%  AtomLayoutA_TV  : ");custom_print(typename tiled_mma::AtomLayoutA_TV {},(test_name+"_AtomLayoutA_TV").c_str(),ps);print("\n");
+    print("%%  AtomLayoutB_TV  : ");custom_print(typename tiled_mma::AtomLayoutB_TV {},(test_name+"_AtomLayoutB_TV").c_str(),ps);print("\n");
+    print("%%  AtomThrID       : ");print       (typename tiled_mma::AtomThrID      {}                                         );print("\n");
+    print("%%  TiledShape_MNK  : ");print       (typename tiled_mma::TiledShape_MNK {}                                         );print("\n");
+    print("%%  ThrLayoutVMNK   : ");print       (typename tiled_mma::ThrLayoutVMNK  {}                                         );print("\n");
+    print("%%  TidLayout       : ");print       (typename tiled_mma::TidLayout      {}                                         );print("\n");
+    // clang-format on
+
+    auto ref = make_layout(make_shape(
+      size<0>(typename tiled_mma::TiledShape_MNK{}),
+      size<1>(typename tiled_mma::TiledShape_MNK{})));
+    auto t_tile =
+      make_tile(left_inverse(get<0>(PermutationsMNK{})), left_inverse(get<1>(PermutationsMNK{})));
+    auto t_tensor = logical_divide(ref, t_tile);
+    auto a_tile = make_tile(
+      make_layout(size<0>(typename tiled_mma::AtomShape_MNK{})),
+      make_layout(size<1>(typename tiled_mma::AtomShape_MNK{})));
+    auto a_tensor = zipped_divide(t_tensor, a_tile);
+    auto tv_tensor = a_tensor.compose(typename tiled_mma::AtomLayoutC_TV{}, _);
+    auto thr_tile = make_tile(
+      _,
+      make_tile(
+        make_layout(size<1>(typename tiled_mma::ThrLayoutVMNK{})),
+        make_layout(size<2>(typename tiled_mma::ThrLayoutVMNK{}))));
+    auto thr_tensor = zipped_divide(tv_tensor, thr_tile);
+    auto tid_frag = thr_tensor.compose(typename tiled_mma::TidLayout{}, _);
+
+    // clang-format off
+    print("%%  Ref        : ");custom_print (ref        ,(test_name+"_Ref").c_str(),ps       );print("\n");
+    print("%%  T_Tile     : ");print        (t_tile                                          );print("\n");
+    print("%%  T_Tensor   : ");custom_print (t_tensor   ,(test_name+"_T_Tensor").c_str(),ps  );print("\n");
+    print("%%  A_Tile     : ");print        (a_tile                                          );print("\n");
+    print("%%  A_Tensor   : ");custom_print (a_tensor   ,(test_name+"_A_Tensor").c_str(),ps  );print("\n");
+    print("%%  Tv_Tensor  : ");custom_print (tv_tensor  ,(test_name+"_Tv_Tensor").c_str(),ps );print("\n");
+    print("%%  Thr_Tile   : ");print        (thr_tile                                        );print("\n");
+    print("%%  Thr_Tensor : ");custom_print (thr_tensor,(test_name+"_Thr_Tensor").c_str(),ps );print("\n");
+    print("%%  Tid_Frag   : ");custom_print (tid_frag   ,(test_name+"_Tid_Frag").c_str(),ps  );print("\n");
+    // clang-format on
+
+
+}
+
+void test_mma_thr_Frag_examples(int ps) {
+    if (ps == 1)
+        print_latex_header();
+    test_mma_thr_Frag<SM80_16x8x16_F16F16F16F16_TN>("mma_m16n8k16_f16f16f16f16", ps);
+    if (ps == 1)
+        print_latex_footer();
+}
+
 int main(int argc, char *argv[]) {
     // print_select
     [[maybe_unused]] int ps{-1};
@@ -683,5 +750,6 @@ int main(int argc, char *argv[]) {
     // test_max_common_vector_examples();
     // test_build_layoutTV_examples();
     // test_tidFrag_examples();
-    test_tile_thrFrag_examples(ps);
+    // test_tile_thrFrag_examples(ps);
+    test_mma_thr_Frag_examples(ps);
 }
