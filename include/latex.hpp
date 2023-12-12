@@ -112,7 +112,8 @@ print_latex(Layout const &layout, const char *name, int hf = 0) // (m,n) -> idx
     }
 
     // Footer
-    printf("\\node[above, font=\\bfseries, anchor=west] at (current bounding box.north west) "
+    printf("\\node[above, font=\\bfseries, anchor=west] at ([yshift=8mm] current bounding "
+           "box.north west) "
            "{\\textbf{\\detokenize{");
     print(name);
     print("\n");
@@ -326,16 +327,17 @@ CUTE_HOST_DEVICE void print_latex_copy(
     }
 
     // Footer
-    printf("\\node[above, font=\\bfseries, text width=3cm, anchor=west] at (current bounding box.north west) "
-           "{\\textbf{\\detokenize{");
+    printf("\\node[above, font=\\bfseries,  align=left] at ([yshift=4mm] current bounding "
+           "box.north west) "
+           "{");
     // clang-format off
-    print(name);print("\n");
-    print("LayoutS   ");print(S   );print("\n");
-    print("LayoutTS  ");print(TS  );print("\n");
-    print("LayoutD   ");print(D   );print("\n");
-    print("LayoutTD  ");print(TD  );print("\n");
+    print("\\textbf{\\detokenize{");print(name);print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutS   ");print(S   );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutTS  ");print(TS  );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutD   ");print(D   );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutTD  ");print(TD  );print("}}\\\\\n");
     // clang-format on
-    printf("}}};\n");
+    printf("};\n");
     printf("\\end{tikzpicture}\n");
     if ((hf >> 1) & 1)
         print_latex_footer();
@@ -511,19 +513,21 @@ CUTE_HOST_DEVICE void print_latex_mma(
     }
 
     // Footer
-    printf("\\node[above, font=\\bfseries, text width=3cm, anchor=west] at (current bounding "
+    printf("\\node[above, font=\\bfseries, align=left] at ([yshift=4mm] current "
+           "bounding "
            "box.north west) "
-           "{\\textbf{\\detokenize{");
+           "{");
     // clang-format off
-    print(name);print("\n");
-    print("LayoutC"   );print(C   );print("\n");
-    print("LayoutThrC"  );print(TC  );print("\n");
-    print("LayoutA"   );print(A   );print("\n");
-    print("LayoutThrA"  );print(TA  );print("\n");
-    print("LayoutB"   );print(B   );print("\n");
-    print("LayoutThrB"  );print(TB  );print("\n");
+
+    print("\\textbf{\\detokenize{"           );print(name );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutC"    );print(C    );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutThrC" );print(TC   );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutA"    );print(A    );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutThrA" );print(TA   );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutB"    );print(B    );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutThrB" );print(TB   );print("}}\\\\\n");
     // clang-format on
-    printf("}}};\n");
+    printf("};\n");
     printf("\\end{tikzpicture}\n");
     if ((hf >> 1) & 1)
         print_latex_footer();
@@ -667,15 +671,15 @@ CUTE_HOST_DEVICE void print_latex_mma(
     }
 
     // Footer
-    printf("\\node[above, font=\\bfseries, text width=3cm,anchor=west] (title) at (current "
-           "bounding box.north west) {\\textbf{\\detokenize{");
+    printf("\\node[above, font=\\bfseries, align=left] (title) at (current "
+           "bounding box.north west) {");
     // clang-format off
-    print(name);print("\n");
-    print("LayoutC"   );print(C   );print("\n");
-    print("LayoutA"   );print(A   );print("\n");
-    print("LayoutB"   );print(B   );print("\n");
+    print("\\textbf{\\detokenize{"        );print(name );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutC" );print(C    );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutA" );print(A    );print("}}\\\\\n");
+    print("\\textbf{\\detokenize{LayoutB" );print(B    );print("}}\\\\\n");
     // clang-format on
-    printf("}}};\n");
+    printf("};\n");
     printf("\\end{tikzpicture}\n");
 
     if ((hf >> 1) & 1)
