@@ -643,42 +643,10 @@ void test_gs_async_sr_ldmatrix_B_examples() {
     // }
 
     // test 2 --> row major + SM75_U16x4_LDSM_T
-    {
-        auto gB_layout = Layout<Shape<_8, _16>>{};
-        auto sB_layout = Layout<Shape<_8, _16>>{};
-        auto thr_layout = Layout<Shape<_2, _16>>{};
-        auto val_layout = Layout<Shape<_4, _1>>{};
-        auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
-        auto sr_cp_op = SM75_U16x4_LDSM_T{};
-
-        auto h_B = at::arange(
-                     decltype(size<0>(gB_layout) * size<1>(gB_layout))::value,
-                     at::TensorOptions().dtype(at::kHalf))
-                     .reshape({size<0>(gB_layout), size<1>(gB_layout)});
-        auto h_out = at::zeros_like(h_B);
-
-        half_t *d_B, *d_out;
-        cudaMalloc((void **)&d_B, h_B.numel() * h_B.element_size());
-        cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
-
-        test_gs_async_sr_ldmatrix_B_host(
-          "gs_async_sr_ldmatrix_U16x4_B_row",
-          d_B,
-          d_out,
-          gB_layout,
-          sB_layout,
-          thr_layout,
-          val_layout,
-          mma_atom_op,
-          sr_cp_op);
-    }
-
-
-    // test 3 --> row major + SM75_U16x4_LDSM_T + thr_row major
     // {
     //     auto gB_layout = Layout<Shape<_8, _16>>{};
     //     auto sB_layout = Layout<Shape<_8, _16>>{};
-    //     auto thr_layout = Layout<Shape<_2, _16>,Stride<_16,_1>>{};
+    //     auto thr_layout = Layout<Shape<_2, _16>>{};
     //     auto val_layout = Layout<Shape<_4, _1>>{};
     //     auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
     //     auto sr_cp_op = SM75_U16x4_LDSM_T{};
@@ -694,7 +662,7 @@ void test_gs_async_sr_ldmatrix_B_examples() {
     //     cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
 
     //     test_gs_async_sr_ldmatrix_B_host(
-    //       "gs_async_sr_ldmatrix_U16x4_B_row_thr_col",
+    //       "gs_async_sr_ldmatrix_U16x4_B_row",
     //       d_B,
     //       d_out,
     //       gB_layout,
@@ -704,6 +672,38 @@ void test_gs_async_sr_ldmatrix_B_examples() {
     //       mma_atom_op,
     //       sr_cp_op);
     // }
+
+
+    // test 3 --> row major + SM75_U16x4_LDSM_T + thr_row major
+    {
+        auto gB_layout = Layout<Shape<_8, _16>>{};
+        auto sB_layout = Layout<Shape<_8, _16>>{};
+        auto thr_layout = Layout<Shape<_2, _16>,Stride<_16,_1>>{};
+        auto val_layout = Layout<Shape<_4, _1>>{};
+        auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
+        auto sr_cp_op = SM75_U16x4_LDSM_T{};
+
+        auto h_B = at::arange(
+                     decltype(size<0>(gB_layout) * size<1>(gB_layout))::value,
+                     at::TensorOptions().dtype(at::kHalf))
+                     .reshape({size<0>(gB_layout), size<1>(gB_layout)});
+        auto h_out = at::zeros_like(h_B);
+
+        half_t *d_B, *d_out;
+        cudaMalloc((void **)&d_B, h_B.numel() * h_B.element_size());
+        cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
+
+        test_gs_async_sr_ldmatrix_B_host(
+          "gs_async_sr_ldmatrix_U16x4_B_row_thr_col",
+          d_B,
+          d_out,
+          gB_layout,
+          sB_layout,
+          thr_layout,
+          val_layout,
+          mma_atom_op,
+          sr_cp_op);
+    }
 
     
 }
