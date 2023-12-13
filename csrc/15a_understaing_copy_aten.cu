@@ -493,9 +493,8 @@ void test_gs_async_sr_ldmatrix_A_examples() {
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //        GS --> Async SR--> Ldmatrix
 // 1. B as the row major
-// 2. B as the col major
-// 3. B as the col major + Swizzle
-// 4. B as the col major + Swizzle + thr in col Major
+// 2. B as the row major + U16x8_T
+// 3. B as the row major + U16x8_T + thr_col
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <
@@ -674,121 +673,39 @@ void test_gs_async_sr_ldmatrix_B_examples() {
           sr_cp_op);
     }
 
-    // test 2 --> col major
+
+    // test 3 --> row major + SM75_U16x4_LDSM_T + thr_row major
     // {
-    //     auto gA_layout = Layout<Shape<_16, _16>, Stride<_16, _1>>{};
-    //     auto sA_layout = Layout<Shape<_16, _16>, Stride<_16, _1>>{};
-    //     auto thr_layout = Layout<Shape<_16, _2>>{};
-    //     auto val_layout = Layout<Shape<_1, _8>>{};
+    //     auto gB_layout = Layout<Shape<_8, _16>>{};
+    //     auto sB_layout = Layout<Shape<_8, _16>>{};
+    //     auto thr_layout = Layout<Shape<_2, _16>,Stride<_16,_1>>{};
+    //     auto val_layout = Layout<Shape<_4, _1>>{};
     //     auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
-    //     auto sr_cp_op = SM75_U32x4_LDSM_N{};
+    //     auto sr_cp_op = SM75_U16x4_LDSM_T{};
 
-    //     auto h_A = at::arange(
-    //                  decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
+    //     auto h_B = at::arange(
+    //                  decltype(size<0>(gB_layout) * size<1>(gB_layout))::value,
     //                  at::TensorOptions().dtype(at::kHalf))
-    //                  .reshape({size<0>(gA_layout), size<1>(gA_layout)});
-    //     auto h_out = at::zeros_like(h_A);
+    //                  .reshape({size<0>(gB_layout), size<1>(gB_layout)});
+    //     auto h_out = at::zeros_like(h_B);
 
-    //     half_t *d_A, *d_out;
-    //     cudaMalloc((void **)&d_A, h_A.numel() * h_A.element_size());
+    //     half_t *d_B, *d_out;
+    //     cudaMalloc((void **)&d_B, h_B.numel() * h_B.element_size());
     //     cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
-
-    //     cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(),
-    //     cudaMemcpyHostToDevice);
-
-    //     test_gs_async_sr_ldmatrix_host(
-    //       "gs_async_sr_ldmatrix_col",
-    //       d_A,
-    //       d_out,
-    //       gA_layout,
-    //       sA_layout,
-    //       thr_layout,
-    //       val_layout,
-    //       mma_atom_op,
-    //       sr_cp_op);
-
-    //     cudaMemcpy(
-    //       h_out.data_ptr(), d_out, h_A.numel() * h_A.element_size(), cudaMemcpyDeviceToHost);
-    //     std::cout << h_out << std::endl;
-    // }
-
-    // test 3--> Share Swizzle
-    // {
-    //     auto gA_layout = Layout<Shape<_16, _16>, Stride<_16, _1>>{};
-    //     auto sA_layout =
-    //       composition(Swizzle<2, 3, 3>{}, Layout<Shape<_16, _16>, Stride<_16, _1>>{});
-    //     auto thr_layout = Layout<Shape<_16, _2>>{};
-    //     auto val_layout = Layout<Shape<_1, _8>>{};
-    //     auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
-    //     auto sr_cp_op = SM75_U32x4_LDSM_N{};
-
-    //     auto h_A = at::arange(
-    //                  decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
-    //                  at::TensorOptions().dtype(at::kHalf))
-    //                  .reshape({size<0>(gA_layout), size<1>(gA_layout)});
-    //     auto h_out = at::zeros_like(h_A);
-
-    //     half_t *d_A, *d_out;
-    //     cudaMalloc((void **)&d_A, h_A.numel() * h_A.element_size());
-    //     cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
-
-    //     cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(),
-    //     cudaMemcpyHostToDevice);
 
     //     test_gs_async_sr_ldmatrix_B_host(
-    //       "gs_async_sr_ldmatrix_swizzle",
-    //       d_A,
+    //       "gs_async_sr_ldmatrix_U16x4_B_row_thr_col",
+    //       d_B,
     //       d_out,
-    //       gA_layout,
-    //       sA_layout,
+    //       gB_layout,
+    //       sB_layout,
     //       thr_layout,
     //       val_layout,
     //       mma_atom_op,
     //       sr_cp_op);
-
-    //     cudaMemcpy(
-    //       h_out.data_ptr(), d_out, h_A.numel() * h_A.element_size(), cudaMemcpyDeviceToHost);
-    //     std::cout << h_out << std::endl;
     // }
-    // TEST 4 sWIZZLE + THR col
-    // {
-    //     auto gA_layout = Layout<Shape<_16, _16>, Stride<_16, _1>>{};
-    //     auto sA_layout = composition(Swizzle<2,3,3>{},Layout<Shape<_16, _16>, Stride<_16,
-    //     _1>>{});
-    //     // auto sA_layout = Layout<Shape<_16, _16>, Stride<_16, _1>>{};
-    //     auto thr_layout = Layout<Shape<_16, _2>,Stride<_2,_1>>{};
-    //     auto val_layout = Layout<Shape<_1, _8>>{};
-    //     auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
-    //     auto sr_cp_op = SM75_U32x4_LDSM_N{};
 
-    //     auto h_A = at::arange(
-    //                  decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
-    //                  at::TensorOptions().dtype(at::kHalf))
-    //                  .reshape({size<0>(gA_layout), size<1>(gA_layout)});
-    //     auto h_out = at::zeros_like(h_A);
-
-    //     half_t *d_A, *d_out;
-    //     cudaMalloc((void **)&d_A, h_A.numel() * h_A.element_size());
-    //     cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
-
-    //     cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(),
-    //     cudaMemcpyHostToDevice);
-
-    //     test_gs_async_sr_ldmatrix_host(
-    //       "gs_async_sr_ldmatrix_swizzle_thr_col",
-    //       d_A,
-    //       d_out,
-    //       gA_layout,
-    //       sA_layout,
-    //       thr_layout,
-    //       val_layout,
-    //       mma_atom_op,
-    //       sr_cp_op);
-
-    //     cudaMemcpy(
-    //       h_out.data_ptr(), d_out, h_A.numel() * h_A.element_size(), cudaMemcpyDeviceToHost);
-    //     std::cout << h_out << std::endl;
-    // }
+    
 }
 
 int main() {
