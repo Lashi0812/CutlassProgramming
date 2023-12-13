@@ -16,6 +16,9 @@
 #include "latex.hpp"
 #include <ATen/ATen.h>
 #include <ATen/ops/rand.h>
+#include <ATen/ops/zeros_like.h>
+#include <c10/core/ScalarType.h>
+#include <cstdint>
 #include <iostream>
 #include <numeric>
 
@@ -234,6 +237,9 @@ template <
   typename Tiled_MMA_>
 __global__ void test_gs_async_sr_ldmatrix_kernel(
   OT const *A,
+  OT *out,
+  uint32_t *toShareAddr,
+  uint32_t *fromShareAddr,
   GA_Layout gA_layout,
   SA_Layout sA_layout,
   GS_Tiled_copy gs_tiled_copy,
@@ -243,11 +249,21 @@ __global__ void test_gs_async_sr_ldmatrix_kernel(
     __shared__ OT smem_A[cosize_v<SA_Layout>];
 
     auto gA = make_tensor(make_gmem_ptr(A), gA_layout);
+    auto gOut = make_tensor(make_gmem_ptr(out), gA_layout);
     auto sA = make_tensor(make_smem_ptr(smem_A), sA_layout);
+
+    auto sToShareAddr = make_tensor(make_gmem_ptr(toShareAddr), sA_layout);
+    auto sFromShareAddr = make_tensor(make_gmem_ptr(fromShareAddr), sA_layout);
 
     auto gs_thr_copy = gs_tiled_copy.get_thread_slice(threadIdx.x);
     auto tAgA = gs_thr_copy.partition_S(gA);
-    auto tAsA = gs_thr_copy.partition_S(sA);
+    auto tAsA = gs_thr_copy.partition_D(sA);
+    auto tAgOut = gs_thr_copy.partition_S(gOut);
+
+    auto tAsTo = gs_thr_copy.partition_D(sToShareAddr);
+    for (int i = 0; i < size(tAsA); ++i) {
+        tAsTo(i) = cast_smem_ptr_to_uint(&tAsA(i));
+    }
 
     copy(gs_tiled_copy, tAgA, tAsA);
     cp_async_fence();
@@ -260,10 +276,16 @@ __global__ void test_gs_async_sr_ldmatrix_kernel(
     auto tCsA = sr_thr_copy.partition_S(sA);
     auto tCrA_view = sr_thr_copy.retile_D(tCrA);
 
-    auto ptr1= &(tCrA_view(0));
-    auto ptr2= &(tCsA(0));
+    auto tCsFrom = sr_thr_copy.partition_S(sFromShareAddr);
+    for (int i = 0; i < size(tCsA); ++i) {
+        tCsFrom(i) = cast_smem_ptr_to_uint(&tCsA(i));
+    }
+
+    auto ptr1 = &(tCrA_view(0));
+    auto ptr2 = &(tCsA(0));
     copy(sr_tiled_copy, tCsA, tCrA_view);
-    // transform(tCrA_view, pre_increment{});
+    transform(tCrA_view, pre_increment{});
+    copy(tCrA_view, tAgOut);
 }
 
 template <
@@ -278,6 +300,9 @@ template <
 void test_gs_async_sr_ldmatrix_host(
   std::string test_name,
   OT const *A,
+  OT *gOut,
+  uint32_t *toShareAddr,
+  uint32_t *fromShareAddr,
   GA_Layout,
   SA_Layout,
   GS_ThrLayout,
@@ -292,7 +317,7 @@ void test_gs_async_sr_ldmatrix_host(
     auto tiled_mma = TiledMMA<MMA_Atom<MMA_ATOM_OP>>{};
     auto sr_tiled_copy = make_tiled_copy_A(Copy_Atom<SR_CP_OP, OT>{}, tiled_mma);
 
-    if (1) {
+    if (0) {
         print_latex_header();
         // clang-format off
         print("%%  GA_LAYOUT     : ");print_latex(gA_layout     ,(test_name+"_GA_LAYOUT"    ).c_str());print("\n");
@@ -330,7 +355,15 @@ void test_gs_async_sr_ldmatrix_host(
 
     // kernel
     test_gs_async_sr_ldmatrix_kernel<<<1, 32>>>(
-      A, gA_layout, sA_layout, gs_tiled_copy, sr_tiled_copy, tiled_mma);
+      A,
+      gOut,
+      toShareAddr,
+      fromShareAddr,
+      gA_layout,
+      sA_layout,
+      gs_tiled_copy,
+      sr_tiled_copy,
+      tiled_mma);
 }
 
 void test_gs_async_sr_ldmatrix_examples() {
@@ -376,19 +409,48 @@ void test_gs_async_sr_ldmatrix_examples() {
                      decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
                      at::TensorOptions().dtype(at::kHalf))
                      .reshape({size<0>(gA_layout), size<1>(gA_layout)});
-        half_t *d_A;
+        auto h_out = at::zeros_like(h_A);
+
+        auto h_toShareAddr = at::arange(
+                               decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
+                               at::TensorOptions().dtype(at::kInt))
+                               .reshape({size<0>(gA_layout), size<1>(gA_layout)});
+        auto h_fromShareAddr = at::arange(
+                                 decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
+                                 at::TensorOptions().dtype(at::kInt))
+                                 .reshape({size<0>(gA_layout), size<1>(gA_layout)});
+
+        half_t *d_A, *d_out;
+        uint32_t *d_toShareAddr, *d_fromShareAddr;
         cudaMalloc((void **)&d_A, h_A.numel() * h_A.element_size());
+        cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
+        cudaMalloc((void **)&d_toShareAddr, h_toShareAddr.numel() * h_toShareAddr.element_size());
+        cudaMalloc(
+          (void **)&d_fromShareAddr, h_fromShareAddr.numel() * h_fromShareAddr.element_size());
         cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(), cudaMemcpyHostToDevice);
 
         test_gs_async_sr_ldmatrix_host(
           "gs_async_sr_ldmatrix_col",
           d_A,
+          d_out,
+          d_toShareAddr,
+          d_fromShareAddr,
           gA_layout,
           sA_layout,
           thr_layout,
           val_layout,
           mma_atom_op,
           sr_cp_op);
+
+        cudaMemcpy(
+          h_out.data_ptr(), d_out, h_A.numel() * h_A.element_size(), cudaMemcpyDeviceToHost);
+        cudaMemcpy(
+          h_toShareAddr.data_ptr(), d_toShareAddr, h_toShareAddr.numel() * h_toShareAddr.element_size(), cudaMemcpyDeviceToHost);
+        cudaMemcpy(
+          h_fromShareAddr.data_ptr(), d_fromShareAddr, h_fromShareAddr.numel() * h_fromShareAddr.element_size(), cudaMemcpyDeviceToHost);
+        std::cout << h_out << std::endl;
+        std::cout << h_toShareAddr << std::endl;
+        std::cout << h_fromShareAddr << std::endl;
     }
 }
 
