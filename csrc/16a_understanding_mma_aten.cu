@@ -50,7 +50,7 @@ __global__ void kernel_mma(
     auto gB = make_tensor(make_gmem_ptr(B), layout_gB);
     auto gC = make_tensor(make_gmem_ptr(C), layout_gC);
 
-    auto sA = make_tensor(make_smem_ptr(storage.smem_a.data()), layout_sA);
+    auto sA = make_tensor(make_smem_ptr(storage.smem_a.data()), swi_layout_sA);
     auto sB = make_tensor(make_smem_ptr(storage.smem_b.data()), layout_sB);
 
     auto gs_thr_copy_A = gs_tiledCopy_A.get_thread_slice(threadIdx.x);
