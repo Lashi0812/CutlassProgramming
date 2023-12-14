@@ -432,7 +432,8 @@ void test_gs_async_sr_ldmatrix_A_examples() {
     //     cudaMalloc((void **)&d_A, h_A.numel() * h_A.element_size());
     //     cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
 
-    //     cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(), cudaMemcpyHostToDevice);
+    //     cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(),
+    //     cudaMemcpyHostToDevice);
 
     //     test_gs_async_sr_ldmatrix_A_host(
     //       "gs_async_sr_ldmatrix_swizzle",
@@ -673,12 +674,11 @@ void test_gs_async_sr_ldmatrix_B_examples() {
     //       sr_cp_op);
     // }
 
-
     // test 3 --> row major + SM75_U16x4_LDSM_T + thr_row major
     {
         auto gB_layout = Layout<Shape<_8, _16>>{};
         auto sB_layout = Layout<Shape<_8, _16>>{};
-        auto thr_layout = Layout<Shape<_2, _16>,Stride<_16,_1>>{};
+        auto thr_layout = Layout<Shape<_2, _16>, Stride<_16, _1>>{};
         auto val_layout = Layout<Shape<_4, _1>>{};
         auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
         auto sr_cp_op = SM75_U16x4_LDSM_T{};
@@ -704,8 +704,6 @@ void test_gs_async_sr_ldmatrix_B_examples() {
           mma_atom_op,
           sr_cp_op);
     }
-
-    
 }
 
 int main() {
