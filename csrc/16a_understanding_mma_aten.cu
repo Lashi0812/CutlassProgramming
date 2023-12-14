@@ -79,49 +79,11 @@ __global__ void kernel_mma(
     auto tCsB = sr_thr_copy_B.partition_S(sB);
     auto tCrB_view = sr_thr_copy_B.retile_D(tCrB);
 
-    // auto ptr_as = &tCrA(0);
-    // auto ptr_ad = &tCrA_view(0);
-    // auto ptr_bs = &tCrB(0);
-    // auto ptr_bd = &tCrB_view(0);
-
     copy(sr_tiledCopy_A, tCsA, tCrA_view);
     copy(sr_tiledCopy_B, tCsB, tCrB_view);
 
     auto fragC = partition_fragment_C(tiledMAA, shape(gC));
     clear(fragC);
-    // auto ptr_cs = &fragC(0);
-    // auto ptr_cd = &tCrC(0);
-
-    // if (thread0()) {
-    // // clang-format off
-    //     print("%%  GA            : ");print(gA                            );print("\n");
-    //     print("%%  GB            : ");print(gB                            );print("\n");
-    //     print("%%  GC            : ");print(gC                            );print("\n");
-    //     print("%%  SA            : ");print(sA                            );print("\n");
-    //     print("%%  SB            : ");print(sB                            );print("\n");
-    //     print("%%  GS_THR_COPY_A : ");print(gs_thr_copy_A                 );print("\n");
-    //     print("%%  TAGA          : ");print(tAgA                          );print("\n");
-    //     print("%%  TASA          : ");print(tAsA                          );print("\n");
-    //     print("%%  GS_THR_COPY_B : ");print(gs_thr_copy_B                 );print("\n");
-    //     print("%%  TBGB          : ");print(tBgB                          );print("\n");
-    //     print("%%  TBSB          : ");print(tBsB                          );print("\n");
-    //     print("%%  THR_MMA       : ");print(thr_mma                       );print("\n");
-    //     print("%%  TCRA          : ");print(tCrA                          );print("\n");
-    //     print("%%  TCRB          : ");print(tCrB                          );print("\n");
-    //     print("%%  layout_tv_A   : ");print(tiledMAA     .get_layoutA_TV());print("\n");
-    //     print("%%  SR_THR_COPY_A : ");print(sr_thr_copy_A                 );print("\n");
-    //     print("%%  TCSA          : ");print(tCsA                          );print("\n");
-    //     print("%%  TCRA_VIEW     : ");print(tCrA_view                     );print("\n");
-    //     print("%%  layout_tv_B   : ");print(tiledMAA     .get_layoutB_TV());print("\n");
-    //     print("%%  SR_THR_COPY_B : ");print(sr_thr_copy_B                 );print("\n");
-    //     print("%%  TCSB          : ");print(tCsB                          );print("\n");
-    //     print("%%  TCRB_VIEW     : ");print(tCrB_view                     );print("\n");
-    //     print("%%  FRAGC         : ");print(fragC                         );print("\n");
-    //     print("%%  rank TCRA_VIEW: ");print(rank(tCrA_view)                     );print("\n");
-    //     print("%%  rank TCRB_VIEW: ");print(rank(tCrB_view)                     );print("\n");
-    //     print("%%  rank FragC    : ");print(rank(fragC)                         );print("\n");
-    // // clang-format on
-    // }
 
     gemm(tiledMAA, fragC, tCrA_view, tCrB_view, fragC);
     copy(fragC, tCrC);
@@ -160,70 +122,6 @@ void host_mma() {
     auto srTiledCopyA = make_tiled_copy_A(Copy_Atom<SM75_U32x4_LDSM_N, half_t>{}, tiled_mma);
     auto srTiledCopyB = make_tiled_copy_B(Copy_Atom<SM75_U16x4_LDSM_T, half_t>{}, tiled_mma);
 
-    // clang-format off
-    // print("%%  LAYOUT_GA    : ");print(layout_gA   );print("\n");
-    // print("%%  LAYOUT_GB    : ");print(layout_gB   );print("\n");
-    // print("%%  LAYOUT_GC    : ");print(layout_gC   );print("\n");
-    // print("%%  LAYOUT_SA    : ");print(layout_sA   );print("\n");
-    // print("%%  LAYOUT_SB    : ");print(layout_sB   );print("\n");
-    // print("%%  TILED_MMA    : ");print(tiled_mma   );print("\n");
-    // print("%%  GSTILEDCOPYA : ");print(gsTiledCopyA);print("\n");
-    // print("%%  GSTILEDCOPYB : ");print(gsTiledCopyB);print("\n");
-    // print("%%  SRTILEDCOPYA : ");print(srTiledCopyA);print("\n");
-    // print("%%  SRTILEDCOPYB : ");print(srTiledCopyB);print("\n");
-    // clang-format on
-
-    // auto [Alayout_MK, Atid] = tiled_mma.get_layoutA_MK();
-    // auto [Blayout_NK, Btid] = tiled_mma.get_layoutB_NK();
-    // auto [Clayout_MN, Ctid] = tiled_mma.get_layoutC_MN();
-
-    // auto Alayout_TV = tiled_mma.get_layoutA_TV();
-    // auto Blayout_TV = tiled_mma.get_layoutB_TV();
-    // auto Clayout_TV = tiled_mma.get_layoutC_TV();
-
-    // print_latex_header();
-    // std::string test_name("und_mma");
-    // mma
-    // print_latex(Alayout_MK, (test_name + "_Alayout_MK").c_str());
-    // print_latex(Blayout_NK, (test_name + "_Blayout_NK").c_str());
-    // print_latex(Clayout_MN, (test_name + "_Clayout_MN").c_str());
-    // print_latex(Alayout_TV, (test_name + "_Alayout_TV").c_str());
-    // print_latex(Blayout_TV, (test_name + "_Blayout_TV").c_str());
-    // print_latex(Clayout_TV, (test_name + "_Clayout_TV").c_str());
-    // print_latex(tiled_mma, (test_name + "_tiled_mma").c_str());
-    // copy GS
-    // auto [gsA_src_MN, gsA_src_MN_thr] = gsTiledCopyA.get_layoutS_MN();
-    // auto gsA_src_TV = gsTiledCopyA.get_layoutS_TV();
-    // auto [gsA_dst_MN, gsA_dst_MN_thr] = gsTiledCopyA.get_layoutD_MN();
-    // auto gsA_dst_TV = gsTiledCopyA.get_layoutD_TV();
-
-    // print_latex(gsA_src_MN, (test_name + "_gsA_colMajor_src_MN").c_str());
-    // print_latex(gsA_src_TV, (test_name + "_gsA_colMajor_src_TV").c_str());
-    // print_latex(gsA_dst_MN, (test_name + "_gsA_colMajor_dst_MN").c_str());
-    // print_latex(gsA_dst_TV, (test_name + "_gsA_colMajor_dst_TV").c_str());
-    // print_latex(gsTiledCopyA, (test_name + "_gsTiledCopyA_colmajor").c_str());
-
-    // copy sr
-    // auto [srA_src_MN, srA_src_MN_thr] = srTiledCopyA.get_layoutS_MN();
-    // auto srA_src_TV = srTiledCopyA.get_layoutS_TV();
-    // auto [srA_dst_MN, srA_dst_MN_thr] = srTiledCopyA.get_layoutD_MN();
-    // auto srA_dst_TV = srTiledCopyA.get_layoutD_TV();
-
-    // print_latex(srA_src_MN, (test_name + "_srA_colMajor_src_MN").c_str());
-    // print_latex(srA_src_TV, (test_name + "_srA_colMajor_src_TV").c_str());
-    // print_latex(srA_dst_MN, (test_name + "_srA_colMajor_dst_MN").c_str());
-    // print_latex(srA_dst_TV, (test_name + "_srA_colMajor_dst_TV").c_str());
-    // print_latex(srTiledCopyA, (test_name + "_srTiledCopyA_colMajor").c_str());
-    // print_latex_footer();
-
-    // auto h_A = at::arange(
-    //              decltype(size<0>(layout_gA) * size<1>(layout_gA))::value,
-    //              at::TensorOptions().dtype(at::kHalf))
-    //              .reshape({size<0>(layout_gA), size<1>(layout_gA)});
-    // auto h_B = at::arange(
-    //              decltype(size<0>(layout_gB) * size<1>(layout_gB))::value,
-    //              at::TensorOptions().dtype(at::kHalf))
-    //              .reshape({size<0>(layout_gB), size<1>(layout_gB)});
     auto h_A =
       at::rand({size<0>(layout_gA), size<1>(layout_gA)}, at::TensorOptions().dtype(at::kHalf));
 
@@ -258,10 +156,6 @@ void host_mma() {
       srTiledCopyB,
       tiled_mma);
     cudaMemcpy(h_C.data_ptr(), d_C, h_C.numel() * h_C.element_size(), cudaMemcpyDeviceToHost);
-    // std::cout << (h_A.matmul(h_B).allclose(h_C) ? "MMA Success" : "MMA Failed") << std::endl;
-    // std::cout << h_A.matmul(h_B) << std::endl;
-    // std::cout << h_C << std::endl;
-    // std::cout << (h_A.matmul(h_B).to(at::kHalf) == h_C) << std::endl;
     cudaFree(d_A);
     cudaFree(d_B);
     cudaFree(d_C);
@@ -270,5 +164,4 @@ void host_mma() {
 int main() {
     host_mma();
     cudaDeviceReset();
-    // print_latex(Layout<Shape<_1,_2>>{},"testfdgdfgdfbgfdhfgnjfgnmfgmfghmghmghmghmghmghmghmghm",3);
 }
