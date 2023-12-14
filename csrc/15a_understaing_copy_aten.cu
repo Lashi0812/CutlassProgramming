@@ -235,6 +235,7 @@ template <
   typename OT,
   typename GA_Layout,
   typename SA_Layout,
+  typename SA_Layout_After,
   typename GS_Tiled_copy,
   typename SR_tiled_copy,
   typename Tiled_MMA_>
@@ -243,6 +244,7 @@ __global__ void test_gs_async_sr_ldmatrix_A_kernel(
   OT *out,
   GA_Layout gA_layout,
   SA_Layout sA_layout,
+  SA_Layout_After sA_layout_after,
   GS_Tiled_copy gs_tiled_copy,
   SR_tiled_copy sr_tiled_copy,
   Tiled_MMA_ tiled_mma) {
@@ -265,12 +267,14 @@ __global__ void test_gs_async_sr_ldmatrix_A_kernel(
     auto thr_mma = tiled_mma.get_thread_slice(threadIdx.x);
     auto tCrA = thr_mma.partition_fragment_A(sA);
 
+    auto sA_after = make_tensor(make_smem_ptr(smem_A), sA_layout_after);
     auto sr_thr_copy = sr_tiled_copy.get_thread_slice(threadIdx.x);
-    auto tCsA = sr_thr_copy.partition_S(sA);
+    // auto tCsA = sr_thr_copy.partition_S(sA);
+    auto tCsA = sr_thr_copy.partition_S(sA_after);
     auto tCrA_view = sr_thr_copy.retile_D(tCrA);
 
-    // auto ptr1 = &(tCrA_view(0));
-    // auto ptr2 = &(tCsA(0));
+    auto ptr1 = &(tCrA_view(0));
+    auto ptr2 = &(tCsA(0));
     copy(sr_tiled_copy, tCsA, tCrA_view);
     transform(tCrA_view, pre_increment{});
     copy(tCrA_view, tAgOut);
@@ -281,6 +285,7 @@ template <
   typename OT = half_t,
   typename GA_Layout,
   typename SA_Layout,
+  typename SA_Layout_After,
   typename GS_ThrLayout,
   typename GS_ValLayout,
   typename MMA_ATOM_OP = SM80_16x8x16_F16F16F16F16_TN,
@@ -291,12 +296,14 @@ void test_gs_async_sr_ldmatrix_A_host(
   OT *gOut,
   GA_Layout,
   SA_Layout,
+  SA_Layout_After,
   GS_ThrLayout,
   GS_ValLayout,
   MMA_ATOM_OP,
   SR_CP_OP) {
     auto gA_layout = GA_Layout{};
     auto sA_layout = SA_Layout{};
+    auto sA_layout_after = SA_Layout_After{};
     auto gs_tiled_copy = make_tiled_copy(
       Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<GS_WT>, OT>{}, GS_ThrLayout{}, GS_ValLayout{});
 
@@ -306,11 +313,12 @@ void test_gs_async_sr_ldmatrix_A_host(
     if (1) {
         print_latex_header();
         // clang-format off
-        print("%%  GA_LAYOUT     : ");print_latex(gA_layout     ,(test_name+"_GA_LAYOUT"    ).c_str());print("\n");
-        print("%%  SA_LAYOUT     : ");print_latex(sA_layout     ,(test_name+"_SA_LAYOUT"    ).c_str());print("\n");
-        print("%%  GS_TILED_COPY : ");print_latex(gs_tiled_copy ,(test_name+"_GS_TILED_COPY").c_str());print("\n");
-        print("%%  TILED_MMA     : ");print_latex(tiled_mma     ,(test_name+"_TILED_MMA"    ).c_str());print("\n");
-        print("%%  SR_TILED_COPY : ");print_latex(sr_tiled_copy ,(test_name+"_SR_TILED_COPY").c_str());print("\n");
+        print("%%  GA_LAYOUT          : " );print_latex(gA_layout       ,(test_name+"_GA_LAYOUT"       ).c_str());print("\n");
+        print("%%  SA_LAYOUT          : " );print_latex(sA_layout       ,(test_name+"_SA_LAYOUT"       ).c_str());print("\n");
+        print("%%  SA_LAYOUT_AFTER    : " );print_latex(sA_layout_after ,(test_name+"_SA_LAYOUT_AFTER" ).c_str());print("\n");
+        print("%%  GS_TILED_COPY      : " );print_latex(gs_tiled_copy   ,(test_name+"_GS_TILED_COPY"   ).c_str());print("\n");
+        print("%%  TILED_MMA          : " );print_latex(tiled_mma       ,(test_name+"_TILED_MMA"       ).c_str());print("\n");
+        print("%%  SR_TILED_COPY      : " );print_latex(sr_tiled_copy   ,(test_name+"_SR_TILED_COPY"   ).c_str());print("\n");
         // clang-format on
 
         // copy-gs
@@ -341,7 +349,7 @@ void test_gs_async_sr_ldmatrix_A_host(
 
     // kernel
     test_gs_async_sr_ldmatrix_A_kernel<<<1, 32>>>(
-      A, gOut, gA_layout, sA_layout, gs_tiled_copy, sr_tiled_copy, tiled_mma);
+      A, gOut, gA_layout, sA_layout, sA_layout_after, gs_tiled_copy, sr_tiled_copy, tiled_mma);
 }
 
 void test_gs_async_sr_ldmatrix_A_examples() {
@@ -489,6 +497,42 @@ void test_gs_async_sr_ldmatrix_A_examples() {
     //       h_out.data_ptr(), d_out, h_A.numel() * h_A.element_size(), cudaMemcpyDeviceToHost);
     //     std::cout << h_out << std::endl;
     // }
+    // test 5 --> M major
+    {
+        auto gA_layout = Layout<Shape<_16, _16>>{};
+        auto sA_layout = composition(Swizzle<2, 3, 3>{}, Layout<Shape<_16, _16>>{});
+        auto sA_layout_after =
+          composition(Swizzle<2, 3, 3>{}, Layout<Shape<_16, _16>, Stride<_16, _1>>{});
+
+        auto thr_layout = Layout<Shape<_2, _16>>{};
+        auto val_layout = Layout<Shape<_8, _1>>{};
+        auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
+        auto sr_cp_op = SM75_U32x4_LDSM_N{};
+
+        auto h_A = at::arange(
+                     decltype(size<0>(gA_layout) * size<1>(gA_layout))::value,
+                     at::TensorOptions().dtype(at::kHalf))
+                     .reshape({size<0>(gA_layout), size<1>(gA_layout)});
+        auto h_out = at::zeros_like(h_A);
+
+        half_t *d_A, *d_out;
+        cudaMalloc((void **)&d_A, h_A.numel() * h_A.element_size());
+        cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
+
+        cudaMemcpy(d_A, h_A.data_ptr(), h_A.numel() * h_A.element_size(), cudaMemcpyHostToDevice);
+
+        test_gs_async_sr_ldmatrix_A_host(
+          "gs_asy_sr_ldm_gs_m_major_sr_k_major",
+          d_A,
+          d_out,
+          gA_layout,
+          sA_layout,
+          sA_layout_after,
+          thr_layout,
+          val_layout,
+          mma_atom_op,
+          sr_cp_op);
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -712,8 +756,8 @@ int main() {
     // test_matrix_copy();
     // test_copy_host();
 
-    // test_gs_async_sr_ldmatrix_A_examples();
-    test_gs_async_sr_ldmatrix_B_examples();
+    test_gs_async_sr_ldmatrix_A_examples();
+    // test_gs_async_sr_ldmatrix_B_examples();
 
     cudaDeviceReset();
 }
