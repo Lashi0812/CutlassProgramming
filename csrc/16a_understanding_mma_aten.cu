@@ -15,7 +15,6 @@
 #include <c10/core/TensorOptions.h>
 #include <c10/util/Half.h>
 
-
 using namespace cute;
 
 // clang-format off
@@ -112,7 +111,7 @@ void host_mma() {
 
     auto gsTiledCopyA = make_tiled_copy(
       Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint128_t>, half_t>{},
-      Layout<Shape<_16, _2>>{},
+      Layout<Shape<_16, _2>, Stride<_2, _1>>{},
       Layout<Shape<_1, _8>>{});
     auto gsTiledCopyB = make_tiled_copy(
       Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
