@@ -763,13 +763,50 @@ void test_gs_async_sr_ldmatrix_B_examples() {
     // }
 
     // N Major
-    {
-        auto gB_layout = Layout<Shape<_8, _16>>{};
-        auto sB_layout = Layout<Shape<_8, _16>>{};
-        auto sB_layout_after = Layout<Shape<_8, _16>, Stride<_16, _1>>{};
+    // {
+    //     auto gB_layout = Layout<Shape<_8, _16>>{};
+    //     auto sB_layout = Layout<Shape<_8, _16>>{};
+    //     auto sB_layout_after = Layout<Shape<_8, _16>, Stride<_16, _1>>{};
 
-        auto thr_layout = Layout<Shape<_2, _16>>{};
-        auto val_layout = Layout<Shape<_4, _1>>{};
+    //     auto thr_layout = Layout<Shape<_2, _16>>{};
+    //     auto val_layout = Layout<Shape<_4, _1>>{};
+    //     auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
+    //     auto sr_cp_op = SM75_U32x2_LDSM_N{};
+
+    //     auto h_B = at::arange(
+    //                  decltype(size<0>(gB_layout) * size<1>(gB_layout))::value,
+    //                  at::TensorOptions().dtype(at::kHalf))
+    //                  .reshape({size<0>(gB_layout), size<1>(gB_layout)});
+    //     auto h_out = at::zeros_like(h_B);
+
+    //     half_t *d_B, *d_out;
+    //     cudaMalloc((void **)&d_B, h_B.numel() * h_B.element_size());
+    //     cudaMalloc((void **)&d_out, h_out.numel() * h_out.element_size());
+
+    //     cudaMemcpy(d_B, h_B.data_ptr(), h_B.numel() * h_B.element_size(),
+    //     cudaMemcpyHostToDevice);
+
+    //     test_gs_async_sr_ldmatrix_B_host(
+    //       "gs_asy_dNMajor_sr_ldm_SKmajor_U32x2_B",
+    //       d_B,
+    //       d_out,
+    //       gB_layout,
+    //       sB_layout,
+    //       sB_layout_after,
+    //       thr_layout,
+    //       val_layout,
+    //       mma_atom_op,
+    //       sr_cp_op);
+    // }
+
+    // K Major --> No change ---> U32x2_N
+    {
+        auto gB_layout = Layout<Shape<_8, _16>, Stride<_16, _1>>{};       // K Major
+        auto sB_layout = Layout<Shape<_8, _16>, Stride<_16, _1>>{};       // K Major
+        auto sB_layout_after = Layout<Shape<_8, _16>, Stride<_16, _1>>{}; // K Major
+
+        auto thr_layout = Layout<Shape<_8, _4>>{};
+        auto val_layout = Layout<Shape<_1, _4>>{};
         auto mma_atom_op = SM80_16x8x16_F16F16F16F16_TN{};
         auto sr_cp_op = SM75_U32x2_LDSM_N{};
 
@@ -786,7 +823,7 @@ void test_gs_async_sr_ldmatrix_B_examples() {
         cudaMemcpy(d_B, h_B.data_ptr(), h_B.numel() * h_B.element_size(), cudaMemcpyHostToDevice);
 
         test_gs_async_sr_ldmatrix_B_host(
-          "gs_asy_dNMajor_sr_ldm_SKmajor_U32x2_B",
+          "gs_asy_dKMajor_sr_ldm_SKmajor_U32x2_B",
           d_B,
           d_out,
           gB_layout,
