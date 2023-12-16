@@ -682,7 +682,7 @@ void test_gs_async_sr_ldmatrix_B_host(std::string test_name, int ps = 0) {
     auto h_B = at::arange(
                  decltype(size<0>(gB_layout) * size<1>(gB_layout))::value,
                  at::TensorOptions().dtype(at::kHalf))
-                 .reshape({size<0>(gB_layout), size<1>(gB_layout)});
+                 .reshape({size<1>(gB_layout), size<0>(gB_layout)});
     auto h_out = at::zeros_like(h_B);
 
     half_t *d_B, *d_out;
@@ -701,19 +701,35 @@ void test_gs_async_sr_ldmatrix_B_host(std::string test_name, int ps = 0) {
 
 void test_gs_async_sr_ldmatrix_B_examples(int ps = 0) {
     // N Major
+    // {
+    //     struct NMajor {
+    //         using GB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
+    //         using SB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
+    //         using SB_LayoutAfter =
+    //           decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_16, _1>>{}));
+    //         using GS_TiledCopy = decltype(make_tiled_copy(
+    //           Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
+    //           Layout<Shape<_2, _16>, Stride<_1, _2>>{},
+    //           Layout<Shape<_4, _1>>{}));
+    //         using SR_CopyAtom = Copy_Atom<SM75_U32x2_LDSM_N, half_t>;
+    //     };
+    //     test_gs_async_sr_ldmatrix_B_host<NMajor>("gs_asy_dNMajor_sr_ldm_SKmajor_U32x2_B", ps);
+    // }
+
+    // N Major2
     {
-        struct NMajor {
+        struct NMajor2 {
             using GB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
-            using SB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
+            using SB_Layout = decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1, _8>>{}));
             using SB_LayoutAfter =
-              decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_16, _1>>{}));
+              decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1, _8>>{}));
             using GS_TiledCopy = decltype(make_tiled_copy(
               Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
               Layout<Shape<_2, _16>, Stride<_1, _2>>{},
               Layout<Shape<_4, _1>>{}));
-            using SR_CopyAtom = Copy_Atom<SM75_U32x2_LDSM_N, half_t>;
+            using SR_CopyAtom = Copy_Atom<SM75_U16x4_LDSM_T, half_t>;
         };
-        test_gs_async_sr_ldmatrix_B_host<NMajor>("gs_asy_dNMajor_sr_ldm_SKmajor_U32x2_B", ps);
+        test_gs_async_sr_ldmatrix_B_host<NMajor2>("gs_asy_dNMajor_sr_ldm_SNmajor_U16x4_B", ps);
     }
 }
 
