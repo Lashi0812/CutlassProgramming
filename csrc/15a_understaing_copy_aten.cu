@@ -608,7 +608,7 @@ __global__ void test_gs_async_sr_ldmatrix_B_kernel(
     auto gs_thr_copy = gs_tiled_copy.get_thread_slice(threadIdx.x);
     auto tBgB = gs_thr_copy.partition_S(gB);
     auto tBsB = gs_thr_copy.partition_D(sB);
-    auto tBgOut = gs_thr_copy.partition_S(gOut);
+    auto tBgOut = gs_thr_copy.partition_D(gOut);
 
     copy(gs_tiled_copy, tBgB, tBsB);
     cp_async_fence();
@@ -634,6 +634,8 @@ __global__ void test_gs_async_sr_ldmatrix_B_kernel(
 template <typename Config>
 void test_gs_async_sr_ldmatrix_B_host(std::string test_name, int ps = 0) {
     auto tiled_mma = TiledMMA<MMA_Atom<SM80_16x8x16_F16F16F16F16_TN>>{};
+
+    auto data_shape = typename Config::DataShape{};
 
     auto gB_layout = typename Config::GB_Layout{};
     auto sB_layout = typename Config::SB_Layout{};
@@ -680,9 +682,9 @@ void test_gs_async_sr_ldmatrix_B_host(std::string test_name, int ps = 0) {
     // clang-foramt on
 
     auto h_B = at::arange(
-                 decltype(size<0>(gB_layout) * size<1>(gB_layout))::value,
+                 decltype(size<0>(data_shape) * size<1>(data_shape))::value,
                  at::TensorOptions().dtype(at::kHalf))
-                 .reshape({size<1>(gB_layout), size<0>(gB_layout)});
+                 .reshape({size<0>(data_shape), size<1>(data_shape)});
     auto h_out = at::zeros_like(h_B);
 
     half_t *d_B, *d_out;
@@ -700,36 +702,66 @@ void test_gs_async_sr_ldmatrix_B_host(std::string test_name, int ps = 0) {
 }
 
 void test_gs_async_sr_ldmatrix_B_examples(int ps = 0) {
-    // N Major
+    // Shape KxN --> N Major
     // {
-    //     struct NMajor {
+    //     struct ShapeKxN_NMajor {
+    //         using DataShape = Shape<_16, _8>;
     //         using GB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
-    //         using SB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
+    //         using SB_Layout =
+    //           decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1,
+    //           _8>>{}));
     //         using SB_LayoutAfter =
-    //           decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_16, _1>>{}));
+    //           decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1,
+    //           _8>>{}));
     //         using GS_TiledCopy = decltype(make_tiled_copy(
     //           Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
     //           Layout<Shape<_2, _16>, Stride<_1, _2>>{},
     //           Layout<Shape<_4, _1>>{}));
-    //         using SR_CopyAtom = Copy_Atom<SM75_U32x2_LDSM_N, half_t>;
+    //         using SR_CopyAtom = Copy_Atom<SM75_U16x4_LDSM_T, half_t>;
     //     };
-    //     test_gs_async_sr_ldmatrix_B_host<NMajor>("gs_asy_dNMajor_sr_ldm_SKmajor_U32x2_B", ps);
+    //     test_gs_async_sr_ldmatrix_B_host<ShapeKxN_NMajor>(
+    //       "gs_asy_dNMajor_sr_ldm_SNmajor_U16x4_B", ps);
     // }
 
-    // N Major2
+    // Shape KxN --> K Major
+    // {
+    //     struct ShapeKxN_KMajor {
+    //         using DataShape = Shape<_16, _8>;
+    //         using GB_Layout = Layout<Shape<_8, _16>, Stride<_16, _1>>;
+    //         using SB_Layout =
+    //           decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_16, _1>>{}));
+    //         using GS_TiledCopy = decltype(make_tiled_copy(
+    //           Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
+    //           Layout<Shape<_8, _4>, Stride<_4, _1>>{},
+    //           Layout<Shape<_1, _4>>{}));
+
+    //         using SB_LayoutAfter =
+    //           decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1, _8>>{}));
+    //         using SR_CopyAtom = Copy_Atom<SM75_U16x4_LDSM_T, half_t>;
+    //     };
+    //     test_gs_async_sr_ldmatrix_B_host<ShapeKxN_KMajor>(
+    //       "gs_asy_dNMajor_sr_ldm_SNmajor_U16x4_B", ps);
+    // }
+
+    // Shape NxK N Major
     {
-        struct NMajor2 {
+        struct ShapeNxK_NMajor {
+            using DataShape = Shape<_8, _16>;
             using GB_Layout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
-            using SB_Layout = decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1, _8>>{}));
+            using SB_Layout =
+              decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1,
+              _8>>{}));
             using SB_LayoutAfter =
-              decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1, _8>>{}));
+              decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1,
+              _8>>{}));
             using GS_TiledCopy = decltype(make_tiled_copy(
               Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
               Layout<Shape<_2, _16>, Stride<_1, _2>>{},
               Layout<Shape<_4, _1>>{}));
             using SR_CopyAtom = Copy_Atom<SM75_U16x4_LDSM_T, half_t>;
         };
-        test_gs_async_sr_ldmatrix_B_host<NMajor2>("gs_asy_dNMajor_sr_ldm_SNmajor_U16x4_B", ps);
+        test_gs_async_sr_ldmatrix_B_host<ShapeNxK_NMajor>(
+          "gs_asy_dNMajor_sr_ldm_SNmajor_U16x4_B", ps);
     }
 }
 
