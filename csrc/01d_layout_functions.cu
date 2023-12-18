@@ -731,13 +731,75 @@ void test_data_and_thread_arrangement_for_mma(std::string test_name) {
     print_latex(tiled_mma, ("TiledMMA_" + test_name).c_str());
 }
 
-void test_data_and_thread_arrangement_for_mma_examples()
-{
+void test_data_and_thread_arrangement_for_mma_examples() {
     print_latex_header();
-    test_data_and_thread_arrangement_for_mma<SM80_16x8x8_F32TF32TF32F32_TN,Layout<Shape<_1,_1,_1>>,Layout<Shape<_1,_1,_1>>>("A1x1x1_V1x1x1");
-    test_data_and_thread_arrangement_for_mma<SM80_16x8x8_F32TF32TF32F32_TN,Layout<Shape<_2,_2,_1>>,Layout<Shape<_1,_1,_1>>>("A2x2x1_V1x1x1");
-    test_data_and_thread_arrangement_for_mma<SM80_16x8x8_F32TF32TF32F32_TN,Layout<Shape<_2,_2,_1>>,Layout<Shape<_1,_2,_1>>>("A2x2x1_V1x2x1");
+    test_data_and_thread_arrangement_for_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_1, _1, _1>>,
+      Layout<Shape<_1, _1, _1>>>("A1x1x1_V1x1x1");
+    test_data_and_thread_arrangement_for_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_1, _1, _1>>>("A2x2x1_V1x1x1");
+    test_data_and_thread_arrangement_for_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_1, _2, _1>>>("A2x2x1_V1x2x1");
     print_latex_footer();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                  Tiled MMA partition the SharedMemory
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout, typename Smem_Layout>
+void test_partition_smem_by_tiled_mma() {
+
+    auto smem_tensor = make_counting_tensor(Smem_Layout{});
+    auto tiled_mma   = TiledMMA<MMA_Atom<MMA_Atom_Op>, Atom_Layout, Val_Layout>{};
+    auto thr_mma     = tiled_mma.get_thread_slice(0);
+    auto part        = thr_mma.partition_A(smem_tensor);
+
+    // clang-format off
+    print("*******************************************\n");
+    print("SMEM_TENSOR : ");print(smem_tensor);print("\n");
+    print("TILED_MMA   : ");print(tiled_mma  );print("\n");
+    print("PART        : ");print_tensor(part       );print("\n");
+    print("*******************************************\n");
+    // print_latex(Smem_Layout{},"Layout128x32",3);
+    // clang-format on
+}
+
+void test_partition_smem_by_tiled_mma_examples() {
+    test_partition_smem_by_tiled_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_1, _1, _1>>,
+      Layout<Shape<_1, _1, _1>>,
+      Layout<Shape<_128, _32>>>();
+    test_partition_smem_by_tiled_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _1, _1>>,
+      Layout<Shape<_1, _1, _1>>,
+      Layout<Shape<_128, _32>>>();
+    test_partition_smem_by_tiled_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _1, _1>>,
+      Layout<Shape<_2, _1, _1>>,
+      Layout<Shape<_128, _32>>>();
+    test_partition_smem_by_tiled_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_1, _1, _1>>,
+      Layout<Shape<_128, _32>>>();
+    test_partition_smem_by_tiled_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_128, _32>>>();
+    test_partition_smem_by_tiled_mma<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_1, _2, _1>>,
+      Layout<Shape<_128, _32>>>();
 }
 
 int main(int argc, char *argv[]) {
@@ -768,5 +830,6 @@ int main(int argc, char *argv[]) {
     // test_tidFrag_examples();
     // test_tile_thrFrag_examples(ps);
     // test_mma_thr_Frag_examples(ps);
-    test_data_and_thread_arrangement_for_mma_examples();
+    // test_data_and_thread_arrangement_for_mma_examples();
+    test_partition_smem_by_tiled_mma_examples();
 }
