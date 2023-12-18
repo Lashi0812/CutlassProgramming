@@ -750,20 +750,85 @@ void test_data_and_thread_arrangement_for_mma_examples() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                  Tiled MMA partition the SharedMemory
+
+
+// Examples 1:
+// Smem Sh :  (128,128,32)
+// TiledThr:  (_1,_1,_1):(_0,_0,_0)
+// Atom_sh :  (16,8,8)
+// th      :  (16,8,8)
+//*smem/th :  (8,16,4)
+
+// TiledVal:  (_1,_1,_1):(_0,_0,_0)
+// *           (Atm_val,smem/th)
+// PART_A   : ((_2,_2),_8,_4):((_8,_512),_16,_1024)
+// PART_B   : (_2,_16,_4):(_512,_8,_1024)
+
+// Examples 2:
+// Smem Sh :  (128,128,32)
+// TiledThr:  (_2,_1,_1):(_1,_0,_0)
+// Atom_sh :  (16,8,8)
+// th      :  (32,8,8)
+//*smem/th :  (4,16,4)
+// TiledVal:  (_1,_1,_1):(_0,_0,_0)
+
+// PART_A   : ((_2,_2),_4,_4):((_8,_512),_32,_1024)
+// PART_B   : (_2,_16,_4):(_512,_8,_1024)
+
+
+// Examples 3:
+// Smem Sh :  (128,128,32)
+// TiledThr:  (_2,_1,_1):(_1,_0,_0)
+// Atom_sh :  (16,8,8)
+// th      :  (32,8,8)
+//*smem/th :  (4,16,4)
+// TiledVal:  (_2,_1,_1):(_1,_0,_0)
+
+// PART_A   : ((_2,_2),_4,_4):((_8,_512),_32,_1024)
+// PART_B   : (_2,_16,_4):(_512,_8,_1024)
+
+// Examples 4:
+// Smem Sh :  (128,128,32)
+// TiledThr:  (_2,_2,_1):(_1,_2,_0)
+// Atom_sh :  (16,8,8)
+// th      :  (32,16,8)
+//*smem/th :  (4,8,4)
+// TiledVal:  (_1,_1,_1):(_0,_0,_0)
+
+// PART_A   : ((_2,_2),_4,_4):((_8,_512),_32,_1024)
+// PART_B   : (_2,_8,_4):(_512,_16,_1024)
+
+// Examples 5:
+// Smem Sh :  (128,128,32)
+// TiledThr:  (_2,_2,_1):(_1,_2,_0)
+// Atom_sh :  (16,8,8)
+// th      :  (32,16,8)
+//*smem/th :  (4,8,4)
+// TiledVal:  (_2,_2,_1):(_1,_2,_0)
+
+// PART_A   : ((_2,_2),_4,_4):((_8,_512),_32,_1024)
+// PART_B   : (_2,_8,_4):(_512,_16,_1024)
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout, typename Smem_Layout>
+template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout, typename Smem_ShapeMNK>
 void test_partition_smem_by_tiled_mma() {
 
-    auto smem_tensor = make_counting_tensor(Smem_Layout{});
-    auto tiled_mma   = TiledMMA<MMA_Atom<MMA_Atom_Op>, Atom_Layout, Val_Layout>{};
-    auto thr_mma     = tiled_mma.get_thread_slice(0);
-    auto part        = thr_mma.partition_A(smem_tensor);
+    auto smem_tensorA = make_counting_tensor(
+      make_layout(make_shape(get<0>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
+    auto smem_tensorB = make_counting_tensor(
+      make_layout(make_shape(get<1>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
+    auto tiled_mma = TiledMMA<MMA_Atom<MMA_Atom_Op>, Atom_Layout, Val_Layout>{};
+    auto thr_mma   = tiled_mma.get_thread_slice(0);
+    auto partA     = thr_mma.partition_A(smem_tensorA);
+    auto partB     = thr_mma.partition_B(smem_tensorB);
 
     // clang-format off
     print("*******************************************\n");
-    print("SMEM_TENSOR : ");print(smem_tensor);print("\n");
-    print("TILED_MMA   : ");print(tiled_mma  );print("\n");
-    print("PART        : ");print_tensor(part       );print("\n");
+    print("SMEM_TENSOR_A : ");print (smem_tensorA );print("\n");
+    print("SMEM_TENSOR_B : ");print (smem_tensorB );print("\n");
+    print("TILED_MMA     : ");print (tiled_mma    );print("\n");
+    print("PART_A        : ");print (partA        );print("\n");
+    print("PART_B        : ");print (partB        );print("\n");
     print("*******************************************\n");
     // print_latex(Smem_Layout{},"Layout128x32",3);
     // clang-format on
@@ -774,32 +839,145 @@ void test_partition_smem_by_tiled_mma_examples() {
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_1, _1, _1>>,
       Layout<Shape<_1, _1, _1>>,
-      Layout<Shape<_128, _32>>>();
+      Shape<_128, _128, _32>>();
     test_partition_smem_by_tiled_mma<
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_2, _1, _1>>,
       Layout<Shape<_1, _1, _1>>,
-      Layout<Shape<_128, _32>>>();
+      Shape<_128, _128, _32>>();
     test_partition_smem_by_tiled_mma<
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_2, _1, _1>>,
       Layout<Shape<_2, _1, _1>>,
-      Layout<Shape<_128, _32>>>();
+      Shape<_128, _128, _32>>();
     test_partition_smem_by_tiled_mma<
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_2, _2, _1>>,
       Layout<Shape<_1, _1, _1>>,
-      Layout<Shape<_128, _32>>>();
+      Shape<_128, _128, _32>>();
     test_partition_smem_by_tiled_mma<
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_2, _2, _1>>,
       Layout<Shape<_2, _2, _1>>,
-      Layout<Shape<_128, _32>>>();
+      Shape<_128, _128, _32>>();
     test_partition_smem_by_tiled_mma<
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_2, _2, _1>>,
       Layout<Shape<_1, _2, _1>>,
-      Layout<Shape<_128, _32>>>();
+      Shape<_128, _128, _32>>();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                  Usage of Val layout in the Thread layout TV --> Copy Atom
+
+// Examples 1:
+
+// TiledThr:  (_1,_1,_1):(_0,_0,_0)
+// TiledVal:  (_1,_1,_1):(_0,_0,_0)
+
+//*                           (atom_thr,atom_val)
+// MMA_Atom LayoutA_TV:    ((_4,_8),(_2,_2)):((_16,_1),(_8,_64))
+//*                          (atom_thr,tiled_thr),(val,tiled_val)
+// Copy_Atm LAYOUT_A_TV : ((_4,_8),((_2,_2),(_1,_1))):((_16,_1),((_8,_64),(_0,_0)))
+
+// MMA_ATOM LayoutB_TV:    ((_4,_8),_2):((_8,_1),_32)
+// Copy_Atm LAYOUT_B_TV : ((_4,_8),(_2,(_1,_1))):((_8,_1),(_32,(_0,_0)))
+
+// MMA_ATOM LayoutC_TV:    ((_4,_8),(_2,_2)):((_32,_1),(_16,_8))
+// Copy_Atom LAYOUT_C_TV : ((_4,_8),((_2,_2),(_1,_1))):((_32,_1),((_16,_8),(_0,_0)))
+
+// Examples 2:
+
+// TiledThr:  (_2,_1,_1):(_1,_0,_0)
+// TiledVal:  (_1,_1,_1):(_0,_0,_0)
+
+//*                           (atom_thr,atom_val)
+// MMA_Atom LayoutA_TV:    ((_4,_8),(_2,_2)):((_16,_1),(_8,_64))
+//*                          (atom_thr,tiled_thr),(val,tiled_val)
+// Copy_Atm LAYOUT_A_TV : ((_4,_8,_2),((_2,_2),(_1,_1))):((_32,_1,_16),((_8,_128),(_0,_0)))
+
+// MMA_ATOM LayoutB_TV:    ((_4,_8),_2):((_8,_1),_32)
+// Copy_Atm LAYOUT_B_TV : ((_4,_8,_2),(_2,(_1,_1))):((_8,_1,_0),(_32,(_0,_0)))
+
+// MMA_ATOM LayoutC_TV:    ((_4,_8),(_2,_2)):((_32,_1),(_16,_8))
+// Copy_Atom LAYOUT_C_TV : ((_4,_8,_2),((_2,_2),(_1,_1))):((_64,_1,_16),((_32,_8),(_0,_0)))
+
+// Examples 3:
+
+// TiledThr:  (_2,_1,_1):(_1,_0,_0)
+// TiledVal:  (_2,_1,_1):(_1,_0,_0)
+
+// MMA_Atom LayoutA_TV:    ((_4,_8),(_2,_2)):((_16,_1),(_8,_64))
+// Copy_Atm LAYOUT_A_TV : ((_4,_8,_2),((_2,_2),(_2,_1))):((_64,_1,_16),((_8,_256),(_32,_0)))
+
+// MMA_ATOM LayoutB_TV:    ((_4,_8),_2):((_8,_1),_32)
+// Copy_Atm LAYOUT_B_TV : ((_4,_8,_2),(_2,(_1,_1))):((_8,_1,_0),(_32,(_0,_0)))
+
+// MMA_ATOM LayoutC_TV:    ((_4,_8),(_2,_2)):((_32,_1),(_16,_8))
+// Copy_Atom LAYOUT_C_TV : ((_4,_8,_2),((_2,_2),(_2,_1))):((_128,_1,_16),((_64,_8),(_32,_0)))
+
+// examples 4:
+
+//   TiledThr:  (_2,_2,_1):(_1,_2,_0)
+//   TiledVal:  (_1,_1,_1):(_0,_0,_0)
+
+//   MMA_Atom LayoutA_TV:    ((_4,_8),(_2,_2)):((_16,_1),(_8,_64))
+//   Copy_Atm LAYOUT_A_TV : ((_4,_8,_2,_2),((_2,_2),(_1,_1))):((_32,_1,_16,_0),((_8,_128),(_0,_0)))
+
+//   MMA_ATOM LayoutB_TV:    ((_4,_8),_2):((_8,_1),_32)
+//   Copy_Atm LAYOUT_B_TV : ((_4,_8,_2,_2),(_2,(_1,_1))):((_16,_1,_0,_8),(_64,(_0,_0)))
+
+//   MMA_ATOM LayoutC_TV:    ((_4,_8),(_2,_2)):((_32,_1),(_16,_8))
+//   Copy_Atom LAYOUT_C_TV :
+//   ((_4,_8,_2,_2),((_2,_2),(_1,_1))):((_64,_1,_16,_256),((_32,_8),(_0,_0)))
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout>
+void test_usage_val_layout_in_TV_layout(std::string test_name) {
+
+    auto tiled_mma  = TiledMMA<MMA_Atom<MMA_Atom_Op>, Atom_Layout, Val_Layout>{};
+    auto layoutA_TV = tiled_mma.get_layoutA_TV();
+    auto layoutB_TV = tiled_mma.get_layoutB_TV();
+    auto layoutC_TV = tiled_mma.get_layoutC_TV();
+
+    // clang-format off
+    print("%% *******************************************\n");
+    print("%% TILED_MMA   : ");print_latex(tiled_mma ,("val_lay_usage_"+test_name+"_TILED_MMA").c_str() );print("\n");
+    print("%% LAYOUT_A_TV : ");print_latex(layoutA_TV,("val_lay_usage_"+test_name+"_LAYOUT_A_TV").c_str() );print("\n");
+    print("%% LAYOUT_B_TV : ");print_latex(layoutB_TV,("val_lay_usage_"+test_name+"_LAYOUT_B_TV").c_str() );print("\n");
+    print("%% LAYOUT_C_TV : ");print_latex(layoutC_TV,("val_lay_usage_"+test_name+"_LAYOUT_C_TV").c_str() );print("\n");    
+    print("%% *******************************************\n");
+    // clang-format on
+}
+
+void test_usage_val_layout_in_TV_layout_examples() {
+    print_latex_header();
+    test_usage_val_layout_in_TV_layout<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_1, _1, _1>>,
+      Layout<Shape<_1, _1, _1>>>("A1x1x1_V1x1x1");
+    test_usage_val_layout_in_TV_layout<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _1, _1>>,
+      Layout<Shape<_1, _1, _1>>>("A2x1x1_V1x1x1");
+    test_usage_val_layout_in_TV_layout<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _1, _1>>,
+      Layout<Shape<_2, _1, _1>>>("A2x1x1_V2x1x1");
+    test_usage_val_layout_in_TV_layout<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_1, _1, _1>>>("A2x2x1_V1x1x1");
+    test_usage_val_layout_in_TV_layout<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_2, _2, _1>>>("A2x2x1_V2x2x1");
+    test_usage_val_layout_in_TV_layout<
+      SM80_16x8x8_F32TF32TF32F32_TN,
+      Layout<Shape<_2, _2, _1>>,
+      Layout<Shape<_1, _2, _1>>>("_A2x2x1_V1x2x1");
+    print_latex_footer();
 }
 
 int main(int argc, char *argv[]) {
@@ -831,5 +1009,6 @@ int main(int argc, char *argv[]) {
     // test_tile_thrFrag_examples(ps);
     // test_mma_thr_Frag_examples(ps);
     // test_data_and_thread_arrangement_for_mma_examples();
-    test_partition_smem_by_tiled_mma_examples();
+    // test_partition_smem_by_tiled_mma_examples();
+    test_usage_val_layout_in_TV_layout_examples();
 }
