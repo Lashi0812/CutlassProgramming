@@ -426,7 +426,7 @@ void test_zipped_divide_examples(int ps) {
 
 template <typename Layout, typename Tile>
 void test_tiled_product() {
-    auto res = tiled_product(Layout{}, Tile{});
+    auto res    = tiled_product(Layout{}, Tile{});
     auto tensor = make_counting_tensor(res);
 
     // clang-format off
@@ -519,12 +519,12 @@ void test_max_common_vector_examples() {
 
 template <typename ThrLayout, typename ValLayout>
 void test_build_layoutTV(std::string test_name) {
-    auto interleaved = raked_product(ThrLayout{}, ValLayout{});
+    auto interleaved    = raked_product(ThrLayout{}, ValLayout{});
     auto val_thr_layout = right_inverse(interleaved);
     auto thr_val_layout =
       val_thr_layout.with_shape(make_shape(size(ThrLayout{}), size(ValLayout{})));
     auto mn_layout = make_layout(product_each(shape(interleaved)));
-    auto zip_div = zipped_divide(mn_layout, shape(ValLayout{}));
+    auto zip_div   = zipped_divide(mn_layout, shape(ValLayout{}));
 
     print_latex(mn_layout, (test_name + std::string("_mn")).c_str());
     print_latex(zip_div, (test_name + std::string("_zip_div")).c_str());
@@ -553,7 +553,7 @@ void test_tidFrag(std::string test_name) {
     auto mn_layout =
       make_layout(product_each(zip((typename tiled_copy::TiledShape_MN{}), make_tuple(2, 2))));
 
-    auto res = tiled_copy::tidfrg_S(mn_layout);
+    auto res        = tiled_copy::tidfrg_S(mn_layout);
     auto res_tensor = make_counting_tensor(res);
 
     // print_latex(mn_layout, (test_name + "_mn_layout").c_str());
@@ -588,7 +588,7 @@ void test_tile_thrFrag(std::string test_name, int ps) {
 
     // auto mn_layout = make_layout(typename tiled_copy::TiledShape_MN{});
 
-    auto tile = zipped_divide(mn_layout, typename tiled_copy::Tiler_MN{});
+    auto tile    = zipped_divide(mn_layout, typename tiled_copy::Tiler_MN{});
     auto ref2trg = right_inverse(typename tiled_copy::AtomLayoutRef{})
                      .compose(typename tiled_copy::AtomLayoutDst{});
 
@@ -597,11 +597,11 @@ void test_tile_thrFrag(std::string test_name, int ps) {
       make_shape(typename tiled_copy::AtomNumThr{}, typename tiled_copy::AtomNumVal{}));
 
     auto trg_layout_TV = atom_layout_TV.compose(ref2trg, _);
-    auto thrval2mn = coalesce(zip(trg_layout_TV), Shape<_1, Shape<_1, _1>>{});
-    auto tv_tensor = tile.compose(thrval2mn, _);
-    auto res = tv_tensor(make_coord(_, _), _);
-    auto res_tensor = make_counting_tensor(res);
-    auto part = thr_copy.partition_S(mn_tensor);
+    auto thrval2mn     = coalesce(zip(trg_layout_TV), Shape<_1, Shape<_1, _1>>{});
+    auto tv_tensor     = tile.compose(thrval2mn, _);
+    auto res           = tv_tensor(make_coord(_, _), _);
+    auto res_tensor    = make_counting_tensor(res);
+    auto part          = thr_copy.partition_S(mn_tensor);
 
     // clang-format off
     print("%%  AtomThrID      : ");print       (typename tiled_copy::AtomThrID      {}                                         );print("\n");
@@ -665,8 +665,8 @@ void test_tile_thrFrag_examples(int ps) {
 
 template <
   typename Operation,
-  typename AtomLayoutMNK = Layout<Shape<_1, _1, _1>>,
-  typename ValLayoutMNK = Layout<Shape<_1, _1, _1>>,
+  typename AtomLayoutMNK   = Layout<Shape<_1, _1, _1>>,
+  typename ValLayoutMNK    = Layout<Shape<_1, _1, _1>>,
   typename PermutationsMNK = Tile<Underscore, Underscore, Underscore>>
 void test_mma_thr_Frag(std::string test_name, int ps) {
     using tiled_mma = TiledMMA<MMA_Atom<Operation>, AtomLayoutMNK, ValLayoutMNK, PermutationsMNK>;
@@ -688,18 +688,18 @@ void test_mma_thr_Frag(std::string test_name, int ps) {
     auto t_tile =
       make_tile(left_inverse(get<0>(PermutationsMNK{})), left_inverse(get<1>(PermutationsMNK{})));
     auto t_tensor = logical_divide(ref, t_tile);
-    auto a_tile = make_tile(
+    auto a_tile   = make_tile(
       make_layout(size<0>(typename tiled_mma::AtomShape_MNK{})),
       make_layout(size<1>(typename tiled_mma::AtomShape_MNK{})));
-    auto a_tensor = zipped_divide(t_tensor, a_tile);
+    auto a_tensor  = zipped_divide(t_tensor, a_tile);
     auto tv_tensor = a_tensor.compose(typename tiled_mma::AtomLayoutC_TV{}, _);
-    auto thr_tile = make_tile(
+    auto thr_tile  = make_tile(
       _,
       make_tile(
         make_layout(size<1>(typename tiled_mma::ThrLayoutVMNK{})),
         make_layout(size<2>(typename tiled_mma::ThrLayoutVMNK{}))));
     auto thr_tensor = zipped_divide(tv_tensor, thr_tile);
-    auto tid_frag = thr_tensor.compose(typename tiled_mma::TidLayout{}, _);
+    auto tid_frag   = thr_tensor.compose(typename tiled_mma::TidLayout{}, _);
 
     // clang-format off
     print("%%  Ref        : ");custom_print (ref        ,(test_name+"_Ref").c_str(),ps       );print("\n");
@@ -712,8 +712,6 @@ void test_mma_thr_Frag(std::string test_name, int ps) {
     print("%%  Thr_Tensor : ");custom_print (thr_tensor,(test_name+"_Thr_Tensor").c_str(),ps );print("\n");
     print("%%  Tid_Frag   : ");custom_print (tid_frag   ,(test_name+"_Tid_Frag").c_str(),ps  );print("\n");
     // clang-format on
-
-
 }
 
 void test_mma_thr_Frag_examples(int ps) {
@@ -722,6 +720,24 @@ void test_mma_thr_Frag_examples(int ps) {
     test_mma_thr_Frag<SM80_16x8x16_F16F16F16F16_TN>("mma_m16n8k16_f16f16f16f16", ps);
     if (ps == 1)
         print_latex_footer();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                                  Data and Thread Arrangement for mma
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+template <typename MMA_Atom_OP_, typename Atom_Layout, typename Val_Layout>
+void test_data_and_thread_arrangement_for_mma(std::string test_name) {
+    auto tiled_mma = TiledMMA<MMA_Atom<MMA_Atom_OP_>, Atom_Layout, Val_Layout>{};
+    print_latex(tiled_mma, ("TiledMMA_" + test_name).c_str());
+}
+
+void test_data_and_thread_arrangement_for_mma_examples()
+{
+    print_latex_header();
+    test_data_and_thread_arrangement_for_mma<SM80_16x8x8_F32TF32TF32F32_TN,Layout<Shape<_1,_1,_1>>,Layout<Shape<_1,_1,_1>>>("A1x1x1_V1x1x1");
+    test_data_and_thread_arrangement_for_mma<SM80_16x8x8_F32TF32TF32F32_TN,Layout<Shape<_2,_2,_1>>,Layout<Shape<_1,_1,_1>>>("A2x2x1_V1x1x1");
+    test_data_and_thread_arrangement_for_mma<SM80_16x8x8_F32TF32TF32F32_TN,Layout<Shape<_2,_2,_1>>,Layout<Shape<_1,_2,_1>>>("A2x2x1_V1x2x1");
+    print_latex_footer();
 }
 
 int main(int argc, char *argv[]) {
@@ -751,5 +767,6 @@ int main(int argc, char *argv[]) {
     // test_build_layoutTV_examples();
     // test_tidFrag_examples();
     // test_tile_thrFrag_examples(ps);
-    test_mma_thr_Frag_examples(ps);
+    // test_mma_thr_Frag_examples(ps);
+    test_data_and_thread_arrangement_for_mma_examples();
 }
