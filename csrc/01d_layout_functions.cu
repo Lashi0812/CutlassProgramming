@@ -13,7 +13,9 @@
 #include "latex.hpp"
 #include <cute/layout.hpp>
 #include <cute/algorithm/copy.hpp>
+#include <numeric>
 #include <string>
+#include <vector>
 
 using namespace cute;
 
@@ -937,8 +939,13 @@ void test_partition_smem_by_tiled_mma_examples() {
 template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout, typename Smem_ShapeMNK>
 void test_usage_val_layout_in_TV_layout(std::string test_name) {
 
-    auto smem_tensorA = make_counting_tensor(
-      make_layout(make_shape(get<0>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
+    auto ivec = std::vector<int>(128 * 32);
+    std::iota(ivec.begin(), ivec.end(), 0);
+    auto smem_tensorA = make_tensor(
+      ivec.data(),
+      tile_to_shape(
+        composition(Swizzle<3, 2, 3>{}, Layout<Shape<_8, _32>, Stride<_32, _1>>{}),
+        make_shape(get<0>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
     auto smem_tensorB = make_counting_tensor(
       make_layout(make_shape(get<1>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
     auto tiled_mma  = TiledMMA<MMA_Atom<MMA_Atom_Op>, Atom_Layout, Val_Layout>{};
@@ -946,21 +953,30 @@ void test_usage_val_layout_in_TV_layout(std::string test_name) {
     auto layoutB_TV = tiled_mma.get_layoutB_TV();
     auto layoutC_TV = tiled_mma.get_layoutC_TV();
 
-    auto sr_copy_atom  = Copy_Atom<SM75_U32x4_LDSM_N, tfloat32_t>{};
+    auto sr_copy_atom    = Copy_Atom<SM75_U32x4_LDSM_N, tfloat32_t>{};
     auto sr_tiled_copy_A = make_tiled_copy_A(sr_copy_atom, tiled_mma);
     auto sr_tiled_copy_B = make_tiled_copy_B(sr_copy_atom, tiled_mma);
 
     auto sr_layoutA_TV = sr_tiled_copy_A.get_layoutS_TV();
     auto sr_layoutB_TV = sr_tiled_copy_B.get_layoutS_TV();
 
+    auto thr_copyA  = sr_tiled_copy_A.get_thread_slice(0);
+    auto copy_partA = thr_copyA.partition_S(smem_tensorA);
+
+    auto thr_mmaA  = tiled_mma.get_thread_slice(0);
+    auto mma_partA = thr_mmaA.partition_A(smem_tensorA);
+
     // clang-format off
     print("%% *******************************************\n");
-    print("%% TILED_MMA      : " );print_latex(tiled_mma     ,("val_lay_usage__"+test_name+"_TILED_MMA").c_str());print("\n");
-    print("%% LAYOUT_A_TV    : " );print_latex(layoutA_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_A_TV").c_str());print("\n");
-    print("%% LAYOUT_B_TV    : " );print_latex(layoutB_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_B_TV").c_str());print("\n");
-    print("%% LAYOUT_C_TV    : " );print_latex(layoutC_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_C_TV").c_str());print("\n");
-    print("%% sr_layoutA_TV  : " );print_latex(sr_layoutA_TV ,("val_lay_usage__"+test_name+"_sr_layoutA_TV").c_str());print("\n");
-    print("%% sr_layoutB_TV  : " );print_latex(sr_layoutB_TV ,("val_lay_usage__"+test_name+"_sr_layoutB_TV").c_str());print("\n");
+    // print("%% TILED_MMA      : " );print_latex(tiled_mma     ,("val_lay_usage__"+test_name+"_TILED_MMA"    ).c_str());print("\n");
+    // print("%% LAYOUT_A_TV    : " );print_latex(layoutA_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_A_TV"  ).c_str());print("\n");
+    // print("%% LAYOUT_B_TV    : " );print_latex(layoutB_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_B_TV"  ).c_str());print("\n");
+    // print("%% LAYOUT_C_TV    : " );print_latex(layoutC_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_C_TV"  ).c_str());print("\n");
+    // print("%% sr_layoutA_TV  : " );print_latex(sr_layoutA_TV ,("val_lay_usage__"+test_name+"_sr_layoutA_TV").c_str());print("\n");
+    print("%% smem_layoutA   : " );print_latex(smem_tensorA.layout()  ,("val_lay_usage__"+test_name+"_smem_layoutA" ).c_str());print("\n");
+    // print("%% sr_layoutB_TV  : " );print_latex(sr_layoutB_TV ,("val_lay_usage__"+test_name+"_sr_layoutB_TV").c_str());print("\n");
+    // print("%% copy Part A : ");print_tensor(copy_partA);print("\n");
+    // print("%% MMa Part A : ");print_tensor(mma_partA);print("\n");
     print("%% *******************************************\n");
     // clang-format on
 }
