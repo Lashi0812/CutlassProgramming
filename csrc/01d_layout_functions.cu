@@ -1,4 +1,6 @@
 #include "cute/tensor.hpp"
+#include "cute/arch/copy_sm75.hpp"
+#include "cute/atom/copy_atom.hpp"
 #include "cute/algorithm/tuple_algorithms.hpp"
 #include "cute/arch/mma_sm80.hpp"
 #include "cute/atom/mma_atom.hpp"
@@ -7,6 +9,7 @@
 #include "cute/numeric/int.hpp"
 #include "cute/numeric/integral_constant.hpp"
 #include "cute/util/print.hpp"
+#include "cutlass/half.h"
 #include "latex.hpp"
 #include <cute/layout.hpp>
 #include <cute/algorithm/copy.hpp>
@@ -751,7 +754,6 @@ void test_data_and_thread_arrangement_for_mma_examples() {
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //                                  Tiled MMA partition the SharedMemory
 
-
 // Examples 1:
 // Smem Sh :  (128,128,32)
 // TiledThr:  (_1,_1,_1):(_0,_0,_0)
@@ -774,7 +776,6 @@ void test_data_and_thread_arrangement_for_mma_examples() {
 
 // PART_A   : ((_2,_2),_4,_4):((_8,_512),_32,_1024)
 // PART_B   : (_2,_16,_4):(_512,_8,_1024)
-
 
 // Examples 3:
 // Smem Sh :  (128,128,32)
@@ -933,50 +934,69 @@ void test_partition_smem_by_tiled_mma_examples() {
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout>
+template <typename MMA_Atom_Op, typename Atom_Layout, typename Val_Layout, typename Smem_ShapeMNK>
 void test_usage_val_layout_in_TV_layout(std::string test_name) {
 
+    auto smem_tensorA = make_counting_tensor(
+      make_layout(make_shape(get<0>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
+    auto smem_tensorB = make_counting_tensor(
+      make_layout(make_shape(get<1>(Smem_ShapeMNK{}), get<2>(Smem_ShapeMNK{}))));
     auto tiled_mma  = TiledMMA<MMA_Atom<MMA_Atom_Op>, Atom_Layout, Val_Layout>{};
     auto layoutA_TV = tiled_mma.get_layoutA_TV();
     auto layoutB_TV = tiled_mma.get_layoutB_TV();
     auto layoutC_TV = tiled_mma.get_layoutC_TV();
 
+    auto sr_copy_atom  = Copy_Atom<SM75_U32x4_LDSM_N, tfloat32_t>{};
+    auto sr_tiled_copy_A = make_tiled_copy_A(sr_copy_atom, tiled_mma);
+    auto sr_tiled_copy_B = make_tiled_copy_B(sr_copy_atom, tiled_mma);
+
+    auto sr_layoutA_TV = sr_tiled_copy_A.get_layoutS_TV();
+    auto sr_layoutB_TV = sr_tiled_copy_B.get_layoutS_TV();
+
     // clang-format off
     print("%% *******************************************\n");
-    print("%% TILED_MMA   : ");print_latex(tiled_mma ,("val_lay_usage_"+test_name+"_TILED_MMA").c_str() );print("\n");
-    print("%% LAYOUT_A_TV : ");print_latex(layoutA_TV,("val_lay_usage_"+test_name+"_LAYOUT_A_TV").c_str() );print("\n");
-    print("%% LAYOUT_B_TV : ");print_latex(layoutB_TV,("val_lay_usage_"+test_name+"_LAYOUT_B_TV").c_str() );print("\n");
-    print("%% LAYOUT_C_TV : ");print_latex(layoutC_TV,("val_lay_usage_"+test_name+"_LAYOUT_C_TV").c_str() );print("\n");    
+    print("%% TILED_MMA      : " );print_latex(tiled_mma     ,("val_lay_usage__"+test_name+"_TILED_MMA").c_str());print("\n");
+    print("%% LAYOUT_A_TV    : " );print_latex(layoutA_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_A_TV").c_str());print("\n");
+    print("%% LAYOUT_B_TV    : " );print_latex(layoutB_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_B_TV").c_str());print("\n");
+    print("%% LAYOUT_C_TV    : " );print_latex(layoutC_TV    ,("val_lay_usage__"+test_name+"_LAYOUT_C_TV").c_str());print("\n");
+    print("%% sr_layoutA_TV  : " );print_latex(sr_layoutA_TV ,("val_lay_usage__"+test_name+"_sr_layoutA_TV").c_str());print("\n");
+    print("%% sr_layoutB_TV  : " );print_latex(sr_layoutB_TV ,("val_lay_usage__"+test_name+"_sr_layoutB_TV").c_str());print("\n");
     print("%% *******************************************\n");
     // clang-format on
 }
 
 void test_usage_val_layout_in_TV_layout_examples() {
     print_latex_header();
-    test_usage_val_layout_in_TV_layout<
-      SM80_16x8x8_F32TF32TF32F32_TN,
-      Layout<Shape<_1, _1, _1>>,
-      Layout<Shape<_1, _1, _1>>>("A1x1x1_V1x1x1");
-    test_usage_val_layout_in_TV_layout<
-      SM80_16x8x8_F32TF32TF32F32_TN,
-      Layout<Shape<_2, _1, _1>>,
-      Layout<Shape<_1, _1, _1>>>("A2x1x1_V1x1x1");
-    test_usage_val_layout_in_TV_layout<
-      SM80_16x8x8_F32TF32TF32F32_TN,
-      Layout<Shape<_2, _1, _1>>,
-      Layout<Shape<_2, _1, _1>>>("A2x1x1_V2x1x1");
+    // test_usage_val_layout_in_TV_layout<
+    //   SM80_16x8x8_F32TF32TF32F32_TN,
+    //   Layout<Shape<_1, _1, _1>>,
+    //   Layout<Shape<_1, _1, _1>>,
+    //   Shape<_128, _128, _32>>("A1x1x1_V1x1x1");
+    // test_usage_val_layout_in_TV_layout<
+    //   SM80_16x8x8_F32TF32TF32F32_TN,
+    //   Layout<Shape<_2, _1, _1>>,
+    //   Layout<Shape<_1, _1, _1>>,
+    //   Shape<_128, _128, _32>>("A2x1x1_V1x1x1");
+    // test_usage_val_layout_in_TV_layout<
+    //   SM80_16x8x8_F32TF32TF32F32_TN,
+    //   Layout<Shape<_2, _1, _1>>,
+    //   Layout<Shape<_2, _1, _1>>,
+    //   Shape<_128, _128, _32>>("A2x1x1_V2x1x1");
+    // test_usage_val_layout_in_TV_layout<
+    //   SM80_16x8x8_F32TF32TF32F32_TN,
+    //   Layout<Shape<_2, _2, _1>>,
+    //   Layout<Shape<_1, _1, _1>>,
+    //   Shape<_128, _128, _32>>("A2x2x1_V1x1x1");
+    // test_usage_val_layout_in_TV_layout<
+    //   SM80_16x8x8_F32TF32TF32F32_TN,
+    //   Layout<Shape<_2, _2, _1>>,
+    //   Layout<Shape<_2, _2, _1>>,
+    //   Shape<_128, _128, _32>>("A2x2x1_V2x2x1");
     test_usage_val_layout_in_TV_layout<
       SM80_16x8x8_F32TF32TF32F32_TN,
       Layout<Shape<_2, _2, _1>>,
-      Layout<Shape<_1, _1, _1>>>("A2x2x1_V1x1x1");
-    test_usage_val_layout_in_TV_layout<
-      SM80_16x8x8_F32TF32TF32F32_TN,
-      Layout<Shape<_2, _2, _1>>,
-      Layout<Shape<_2, _2, _1>>>("A2x2x1_V2x2x1");
-    test_usage_val_layout_in_TV_layout<
-      SM80_16x8x8_F32TF32TF32F32_TN,
-      Layout<Shape<_2, _2, _1>>,
-      Layout<Shape<_1, _2, _1>>>("_A2x2x1_V1x2x1");
+      Layout<Shape<_1, _2, _1>>,
+      Shape<_128, _128, _32>>("A2x2x1_V1x2x1");
     print_latex_footer();
 }
 
