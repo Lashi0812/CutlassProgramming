@@ -33,7 +33,7 @@ CUTE_HOST_DEVICE void print_latex_header() {
 
            "\\tikzset{\n"
            "png export/.style={\n"
-           "external/system call/.add={}{; convert -density 300 -background \"grey\" -alpha remove "
+           "external/system call/.add={}{; convert -density 150 -background \"grey\" -alpha remove "
            "\"\\image.pdf\" "
            "\"$(IMAGE_PATH)/\\image.png\"},\n"
            "/pgf/images/external info,\n"
