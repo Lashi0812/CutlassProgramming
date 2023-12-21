@@ -77,7 +77,7 @@ __global__ void kernel_mma(
     auto sr_thr_copy_B = sr_tiledCopy_B.get_thread_slice(threadIdx.x);
     auto tCsB          = sr_thr_copy_B.partition_S(sB_after);
     auto tCrB_view     = sr_thr_copy_B.retile_D(tCrB);
-
+    
     // auto ptr1 = &(tCrA(0));
     copy(sr_tiledCopy_A, tCsA, tCrA_view);
     copy(sr_tiledCopy_B, tCsB, tCrB_view);
@@ -85,7 +85,7 @@ __global__ void kernel_mma(
     auto fragC = partition_fragment_C(tiledMAA, shape(gC));
     clear(fragC);
 
-    gemm(tiledMAA, fragC, tCrA_view, tCrB_view, fragC);
+    gemm(tiledMAA, fragC, tCrA, tCrB, fragC);
     copy(fragC, tCrC);
 }
 

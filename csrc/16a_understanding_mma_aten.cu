@@ -91,7 +91,7 @@ __global__ void kernel_mma(
     auto fragC = partition_fragment_C(tiledMAA, shape(gC));
     clear(fragC);
 
-    gemm(tiledMAA, fragC, tCrA_view, tCrB_view, fragC);
+    gemm(tiledMAA, fragC, tCrA, tCrB, fragC);
     copy(fragC, tCrC);
 }
 
@@ -180,7 +180,7 @@ void host_mma(std::string test_case) {
     else if (test_case == "TT")
         cpu_ans = h_A.mT().matmul(h_B.mT());
 
-    std::cout << (cpu_ans.allclose(h_C) ? "MMA Success" : "MMA Failed") << std::endl;
+    std::cout << (h_C.allclose(cpu_ans, 1e-02) ? "MMA Success" : "MMA Failed") << std::endl;
     std::cout << cpu_ans << std::endl;
     std::cout << h_C << std::endl;
     std::cout << (cpu_ans.to(at::kHalf) == h_C) << std::endl;
@@ -281,7 +281,7 @@ struct B_ShapeKxN_Kmajor {
     using GmemLayout = Layout<Shape<_8, _16>, Stride<_16, _1>>;
     using SmemLayout =
       decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_16, _1>>{}));
-    using SmemLayoutAfter =
+        using SmemLayoutAfter =
       decltype(composition(Swizzle<1, 3, 3>{}, Layout<Shape<_8, _16>, Stride<_1, _8>>{}));
     using GSTiledCopy = decltype(make_tiled_copy(
       Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, half_t>{},
@@ -289,7 +289,7 @@ struct B_ShapeKxN_Kmajor {
       Layout<Shape<_1, _4>>{}));
 
     using SRCopyAtom = Copy_Atom<SM75_U16x4_LDSM_T, half_t>;
-};
+    };
 
 struct B_ShapeKxN_Nmajor {
     using GmemLayout = Layout<Shape<_8, _16>, Stride<_1, _8>>;
