@@ -1,3 +1,4 @@
+#include "cute/stride.hpp"
 #include "cute/tensor.hpp"
 #include "cute/arch/copy_sm80.hpp"
 #include "cute/arch/mma_sm80.hpp"
@@ -176,11 +177,76 @@ void test_layout_tv_examples() {
     test_layout_tv<Layout<Shape<_2, _4>, Stride<_4, _1>>, Layout<Shape<_2, _8>>>();
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//                  Understanding the Source and destination partition of tiled copy
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename ThrLayout, typename ValLayout, typename SrcLayout, typename DstLayout>
+void test_source_and_dest_partition() {
+    using TiledCopy = decltype(make_tiled_copy(
+      Copy_Atom<SM80_CP_ASYNC_CACHEALWAYS<uint64_t>, tfloat32_t>{}, ThrLayout{}, ValLayout{}));
+
+    auto src_tensor = make_counting_tensor(SrcLayout{});
+    auto dst_tensor = make_counting_tensor(DstLayout{});
+
+    TiledCopy tiled_copy;
+    auto      thr_copy = tiled_copy.get_thread_slice(0);
+    auto      tSgS     = thr_copy.partition_S(src_tensor);
+    auto      tDgD     = thr_copy.partition_D(dst_tensor);
+
+    // clang-format off
+    print("ThrLayout     : ");print       (ThrLayout{}                         );print("\n");
+    print("ValLayout     : ");print       (ValLayout{}                         );print("\n");
+    print("Tiler_MN      : ");print       (typename  TiledCopy::Tiler_MN{}     );print("\n");
+    print("AtomLayoutSrc : ");print       (typename  TiledCopy::AtomLayoutSrc{});print("\n");
+    print("AtomLayoutDst : ");print       (typename  TiledCopy::AtomLayoutDst{});print("\n");
+    print("SrcLayout     : ");print       (SrcLayout{}                         );print("\n");
+    print("DstLayout     : ");print       (DstLayout{}                         );print("\n");
+    print("tSgS          : ");print_tensor(tSgS                                );print("\n");
+    print("tDgD          : ");print_tensor(tDgD                                );print("\n");
+    print("******************************************\n");
+    // clang-format on
+}
+
+void test_source_and_dest_partition_examples() {
+    test_source_and_dest_partition<
+      Layout<Shape<_2, _4>, Stride<_1, _2>>,
+      Layout<Shape<_2, _1>>,
+      Layout<Shape<_16, _16>, Stride<_1, _16>>,
+      Layout<Shape<_8, _2>, Stride<_1, _8>>>();
+    test_source_and_dest_partition<
+      Layout<Shape<_2, _4>, Stride<_1, _2>>,
+      Layout<Shape<_2, _2>>,
+      Layout<Shape<_16, _16>, Stride<_1, _16>>,
+      Layout<Shape<_8, _2>, Stride<_1, _8>>>();
+    test_source_and_dest_partition<
+      Layout<Shape<_2, _4>, Stride<_4, _1>>,
+      Layout<Shape<_1, _2>>,
+      Layout<Shape<_16, _16>, Stride<_16, _1>>,
+      Layout<Shape<_8, _2>, Stride<_2, _1>>>();
+    test_source_and_dest_partition<
+      Layout<Shape<_2, _4>, Stride<_4, _1>>,
+      Layout<Shape<_2, _2>>,
+      Layout<Shape<_16, _16>, Stride<_16, _1>>,
+      Layout<Shape<_8, _2>, Stride<_2, _1>>>();
+    test_source_and_dest_partition<
+      Layout<Shape<_2, _4>, Stride<_4, _1>>,
+      Layout<Shape<_1, _4>>,
+      Layout<Shape<_16, _16>, Stride<_16, _1>>,
+      Layout<Shape<_8, _2>, Stride<_2, _1>>>();
+    test_source_and_dest_partition<
+      Layout<Shape<_2, _4>, Stride<_4, _1>>,
+      Layout<Shape<_2, _4>>,
+      Layout<Shape<_16, _16>, Stride<_16, _1>>,
+      Layout<Shape<_8, _2>, Stride<_2, _1>>>();
+}
+
 int main(int argc, char *argv[]) {
     // print_select
     [[maybe_unused]] int ps{-1};
     if (argc >= 2)
         ps = atoi(argv[1]);
     // test_sr_tiled_copy_and_tiled_mma_examples(ps);
-    test_layout_tv_examples();
+    // test_layout_tv_examples();
+    test_source_and_dest_partition_examples();
 }
