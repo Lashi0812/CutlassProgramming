@@ -1,3 +1,5 @@
+#include "cute/algorithm/tuple_algorithms.hpp"
+#include "cute/numeric/integer_sequence.hpp"
 #include "cute/stride.hpp"
 #include "cute/tensor.hpp"
 #include "cute/arch/copy_sm80.hpp"
@@ -9,6 +11,7 @@
 #include "latex.hpp"
 #include <cute/layout.hpp>
 #include <cute/algorithm/copy.hpp>
+#include <iostream>
 #include <numeric>
 #include <string>
 #include <vector>
@@ -241,6 +244,13 @@ void test_source_and_dest_partition_examples() {
       Layout<Shape<_8, _2>, Stride<_2, _1>>>();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////
+//                      For Each
+//////////////////////////////////////////////////////////////////////////////////////////////
+void test_for_each() {
+    for_each(make_int_sequence<5>{}, [&](auto k) { std::cout << k << std::endl; });
+}
+
 int main(int argc, char *argv[]) {
     // print_select
     [[maybe_unused]] int ps{-1};
@@ -248,5 +258,6 @@ int main(int argc, char *argv[]) {
         ps = atoi(argv[1]);
     // test_sr_tiled_copy_and_tiled_mma_examples(ps);
     // test_layout_tv_examples();
-    test_source_and_dest_partition_examples();
+    // test_source_and_dest_partition_examples();
+    test_for_each();
 }
