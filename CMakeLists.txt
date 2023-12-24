@@ -4,6 +4,7 @@ project(cutlass CUDA CXX)
 set(CMAKE_PREFIX_PATH /root/miniconda3/envs/nlp/lib/python3.11/site-packages/torch/share/cmake)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CUDA_USE_RESPONSE_FILE_FOR_INCLUDES 0)
+set(CMAKE_COLOR_DIAGNOSTICS ON)
 
 
 find_package(Torch REQUIRED)
