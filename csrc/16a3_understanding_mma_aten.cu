@@ -107,6 +107,33 @@ __global__ void kernel_mma(
     auto fragC = partition_fragment_C(tiledMAA, shape(gC));
     clear(fragC);
 
+    // if (thread0()) {
+    //     // clang-format off
+    //     print("gA        : ");print(gA       );print("\n");
+    //     print("gB        : ");print(gB       );print("\n");
+    //     print("gC        : ");print(gC       );print("\n");
+    //     print("sA            : ");print(sA           );print("\n");
+    //     print("sB            : ");print(sB           );print("\n");
+    //     print("gs_thr_copy_A : ");print(gs_thr_copy_A);print("\n");
+    //     print("tAgA          : ");print(tAgA         );print("\n");
+    //     print("tAsA          : ");print(tAsA         );print("\n");
+    //     print("gs_thr_copy_B : ");print(gs_thr_copy_B);print("\n");
+    //     print("tBgB          : ");print(tBgB         );print("\n");
+    //     print("tBsB          : ");print(tBsB         );print("\n");
+    //     print("thr_mma       : ");print(thr_mma      );print("\n");
+    //     print("tCrA          : ");print(tCrA         );print("\n");
+    //     print("tCrB          : ");print(tCrB         );print("\n");
+    //     print("tCrC          : ");print(tCrC         );print("\n");
+    //     print("sr_thr_copy_A : ");print(sr_thr_copy_A);print("\n");
+    //     print("tCsA          : ");print(tCsA         );print("\n");
+    //     print("tCrA_view     : ");print(tCrA_view    );print("\n");
+    //     print("sr_thr_copy_B : ");print(sr_thr_copy_B);print("\n");
+    //     print("tCsB          : ");print(tCsB         );print("\n");
+    //     print("tCrB_view     : ");print(tCrB_view    );print("\n");
+    //     print("fragC         : ");print(fragC        );print("\n");
+    //     // clang-format on
+    // }
+
     gemm(tiledMAA, fragC, tCrA, tCrB, fragC);
     copy(fragC, tCrC);
 }

@@ -9,6 +9,7 @@
 #include "cute/numeric/tfloat.hpp"
 #include "cute/underscore.hpp"
 #include <ATen/ATen.h>
+#include "latex.hpp"
 
 using namespace cute;
 using X = Underscore;
@@ -417,11 +418,15 @@ void host_mma() {
 }
 
 int main() {
-    host_mma<GemmConfig<
-      tfloat32_t,
-      float,
-      _16,
-      SM80_16x8x8_F32TF32TF32F32_TN,
-      GenRowMajor,
-      GenColMajor>>();
+    // host_mma<GemmConfig<
+    //   tfloat32_t,
+    //   float,
+    //   _16,
+    //   SM80_16x8x8_F32TF32TF32F32_TN,
+    //   GenRowMajor,
+    //   GenColMajor>>();
+
+    using test = OperandA<tfloat32_t, _16, GenRowMajor, 128>;
+    std::cout << "%% " << test::ThrMode0 << " , " << test::ThrMode1 << std::endl;
+    print_latex(typename test::GSTiledCopy{}, "GSTiledCopy_T8x16_V1x4",3);
 }
