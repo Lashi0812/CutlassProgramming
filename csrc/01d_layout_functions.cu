@@ -409,20 +409,53 @@ void test_zipped_product_examples(int ps) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <typename Layout, typename Tile>
-void test_zipped_divide(int ps) {
+void test_zipped_divide() {
     auto res = zipped_divide(Layout{}, Tile{});
 
     // clang-format off
-    print("Input : ");custom_print(Layout{},ps);print(" , ");print(Tile{});print("\n");
-    custom_print(res,ps);print("\n");
+    print("Input : ");print_tensor(make_counting_tensor(Layout{}));print(" , ");print(Tile{});print("\n");
+    print_tensor(make_counting_tensor(res));print("\n");
     // clang-format on
 }
 
-void test_zipped_divide_examples(int ps) {
-    test_zipped_divide<Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>>, Shape<_1, _8>>(ps);
-    test_zipped_divide<
+void test_zipped_divide_examples() {
+    // test_zipped_divide<Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>>, Shape<_1, _8>>(ps);
+    // test_zipped_divide<
+    //   Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>, Stride<Stride<_4, Int<48>>, Stride<_1, _8>>>,
+    //   Shape<_1, _8>>(ps);
+    test_zipped_divide<Layout<Shape<Int<24>>>, Shape<_4>>();
+    test_zipped_divide<Layout<Shape<_4, _6>>, Shape<_1, _2>>();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+//                          tiled divide
+// Layout   ==> thr,val
+// tile     ==> g_thr,g_val  gather
+// tiled_div  ==> (g_thr,g_val),r_thr,r_val reminder
+
+// Layout     ==> ((_2,_3),(_4,_6)):((_1,_2),(_6,_24))
+// tile       ==> (_1,_8)
+// tiled_div  ==> ((_1,_8),_6,_3):((_0,_6),_1,_48)
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+template <typename Layout, typename Tile>
+void test_tiled_divide() {
+    auto res = tiled_divide(Layout{}, Tile{});
+
+    // clang-format off
+    print("Input : ");print_tensor(make_counting_tensor(Layout{}));print(" , ");print(Tile{});print("\n");
+    print_tensor(make_counting_tensor(res));print("\n");
+    // clang-format on
+}
+
+void test_tiled_divide_examples() {
+    test_tiled_divide<Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>>, Shape<_1, _8>>();
+    test_tiled_divide<
       Layout<Shape<Shape<_2, _3>, Shape<_4, _6>>, Stride<Stride<_4, Int<48>>, Stride<_1, _8>>>,
-      Shape<_1, _8>>(ps);
+      Shape<_1, _8>>();
+    test_tiled_divide<Layout<Shape<Int<24>>>, Shape<_4>>();
+    test_tiled_divide<Layout<Shape<_4, _6>>, Shape<_1, _2>>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1037,7 +1070,8 @@ int main(int argc, char *argv[]) {
     // test_raked_product_examples(ps);
     // test_with_shape_examples(ps);
     // test_zipped_product_examples(ps);
-    // test_zipped_divide_examples(ps);
+    test_zipped_divide_examples();
+    test_tiled_divide_examples();
     // test_tiled_product_examples();
     // test_max_common_vector_examples();
     // test_build_layoutTV_examples();
@@ -1046,5 +1080,5 @@ int main(int argc, char *argv[]) {
     // test_mma_thr_Frag_examples(ps);
     // test_data_and_thread_arrangement_for_mma_examples();
     // test_partition_smem_by_tiled_mma_examples();
-    test_usage_val_layout_in_TV_layout_examples();
+    // test_usage_val_layout_in_TV_layout_examples();
 }
